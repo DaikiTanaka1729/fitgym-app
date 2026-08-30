@@ -1,0 +1,881 @@
+<title>FitGym 画面遷移図</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700&family=Noto+Sans+JP:wght@400;500&family=Roboto+Mono:wght@500&display=swap">
+
+<style>
+  :root {
+    --bg:        #F7F8FB;
+    --surface:   #FFFFFF;
+    --surface-2: #EFF2F8;
+    --ink:       #1E2430;
+    --muted:     #626A7C;
+    --line:      #E1E5EE;
+    --line-soft: #EDF0F6;
+
+    --member:  #1A9E6E;
+    --admin:   #1E2761;
+    --accent:  #534AB7;
+    --amber:   #A06A0C;
+    --amber-bg:#FBF1DE;
+    --danger:  #BF423C;
+    --danger-bg:#FBEDEC;
+
+    --shadow: 0 1px 2px rgba(24,30,50,.05), 0 8px 24px -12px rgba(24,30,50,.16);
+
+    --display: "Zen Kaku Gothic New", "Yu Gothic", "Hiragino Kaku Gothic ProN", system-ui, sans-serif;
+    --body: "Noto Sans JP", "Yu Gothic", "Hiragino Kaku Gothic ProN", system-ui, sans-serif;
+    --mono: "Roboto Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:        #10121A;
+      --surface:   #181B24;
+      --surface-2: #1F232F;
+      --ink:       #E9EBF2;
+      --muted:     #969DAF;
+      --line:      #2A2F3D;
+      --line-soft: #232734;
+
+      --member:  #3FBF8E;
+      --admin:   #8894E8;
+      --accent:  #A79EF0;
+      --amber:   #D9A745;
+      --amber-bg:#2E2617;
+      --danger:  #E4726B;
+      --danger-bg:#2E1B1A;
+
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg:        #10121A;
+    --surface:   #181B24;
+    --surface-2: #1F232F;
+    --ink:       #E9EBF2;
+    --muted:     #969DAF;
+    --line:      #2A2F3D;
+    --line-soft: #232734;
+
+    --member:  #3FBF8E;
+    --admin:   #8894E8;
+    --accent:  #A79EF0;
+    --amber:   #D9A745;
+    --amber-bg:#2E2617;
+    --danger:  #E4726B;
+    --danger-bg:#2E1B1A;
+
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 15px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 56px;
+  }
+
+  /* ---------- header ---------- */
+  header { display: flex; flex-direction: column; gap: 14px; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(30px, 5vw, 42px);
+    line-height: 1.25;
+    letter-spacing: .01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .lede {
+    max-width: 62ch;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    margin-top: 6px;
+  }
+
+  .chip {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .04em;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* ---------- sections ---------- */
+  section { display: flex; flex-direction: column; gap: 18px; }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 21px;
+    line-height: 1.4;
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  h2 .num {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: .08em;
+  }
+
+  h3 {
+    font-family: var(--display);
+    font-weight: 500;
+    font-size: 15px;
+    margin: 0 0 2px;
+  }
+
+  p { margin: 0; max-width: 68ch; }
+  .note { color: var(--muted); font-size: 13.5px; }
+
+  /* ---------- figures ---------- */
+  figure {
+    margin: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .canvas { overflow-x: auto; padding: 20px 20px 8px; }
+  .canvas svg { display: block; width: 100%; min-width: 720px; height: auto; }
+
+  figcaption {
+    border-top: 1px solid var(--line-soft);
+    padding: 12px 20px 14px;
+    font-size: 13px;
+    color: var(--muted);
+    background: var(--surface-2);
+  }
+
+  /* ---------- legend ---------- */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .swatch {
+    width: 22px; height: 12px; border-radius: 3px;
+    border: 1.5px solid var(--muted); background: var(--surface);
+  }
+  .swatch.m { border-color: var(--member); }
+  .swatch.a { border-color: var(--admin); }
+  .swatch.new { border-style: dashed; border-color: var(--accent); }
+  .swatch.lock { border-style: dashed; border-color: var(--amber); background: var(--amber-bg); }
+
+  /* ---------- table ---------- */
+  .table-wrap {
+    overflow-x: auto;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+  }
+
+  table {
+    width: 100%;
+    min-width: 860px;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  thead th {
+    text-align: left;
+    font-family: var(--display);
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: .04em;
+    color: var(--muted);
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface-2);
+    white-space: nowrap;
+  }
+
+  tbody td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: top;
+    line-height: 1.6;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  tbody tr.group td {
+    background: var(--surface-2);
+    font-family: var(--display);
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: .06em;
+    color: var(--muted);
+    padding: 8px 14px;
+  }
+
+  td.id {
+    font-family: var(--mono);
+    font-size: 12px;
+    white-space: nowrap;
+    letter-spacing: .02em;
+  }
+  td.id.m { color: var(--member); }
+  td.id.a { color: var(--admin); }
+
+  td.flow { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+
+  .star {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px dashed var(--accent);
+    color: var(--accent);
+    margin-left: 6px;
+    letter-spacing: .04em;
+  }
+
+  .lock-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: var(--amber-bg);
+    color: var(--amber);
+    margin-left: 6px;
+  }
+
+  /* ---------- open questions ---------- */
+  ol.q { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; counter-reset: q; }
+
+  ol.q li {
+    counter-increment: q;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    padding: 14px 18px 15px 16px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 14px;
+    align-items: baseline;
+  }
+
+  ol.q li::before {
+    content: "Q" counter(q);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: .06em;
+  }
+
+  ol.q li h3 { grid-column: 2; }
+  ol.q li p { grid-column: 2; font-size: 13.5px; color: var(--muted); }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  a { color: var(--accent); }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 36px 16px 72px; gap: 44px; }
+    .canvas { padding: 14px 14px 4px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">FitGym 9/20版 · 単一店舗PoC</div>
+    <h1>画面遷移図</h1>
+    <p class="lede">
+      基本設計書(W1成果物)・予約メニュー追補・パスワード再設定追補の3点と、
+      引き継ぎ済みのデモHTMLから全画面を洗い出したものです。
+      画面ごとの詳細設計・修正はこの図と一覧表を土台に進めます。
+      会員側は<strong>スマートフォンの縦長画面</strong>、管理者側はタブレット / PC 幅を基準に設計します。
+    </p>
+    <div class="meta">
+      <span class="chip">作成 2026-08-31</span>
+      <span class="chip">会員 10画面 · スマホ縦長</span>
+      <span class="chip">管理者 11画面 · PC / タブレット</span>
+      <span class="chip">要確認 6件</span>
+    </div>
+  </header>
+
+  <!-- ======================= 会員フロー ======================= -->
+  <section>
+    <h2><span class="num">01</span>会員フロー</h2>
+    <p class="note">
+      起点はログイン画面。仮パスワードで入った場合だけ、ホームの手前に強制変更が挟まります。
+      記録とマイページは 9/20版では封印し、タブは押せない状態で見せます。
+      全画面スマートフォンの縦長 1画面に収める前提で、ホーム以降は画面下部のタブバーで行き来します。
+    </p>
+
+    <div class="legend">
+      <span><i class="swatch m"></i>会員画面(確定ID)</span>
+      <span><i class="swatch new"></i>今回ID採番を提案</span>
+      <span><i class="swatch lock"></i>9/20版では封印</span>
+    </div>
+
+    <figure style="--flow: var(--member)">
+      <div class="canvas">
+        <svg viewBox="0 0 1040 450" role="img"
+             aria-label="会員フローの画面遷移図。体験予約フォームと会員登録からログインへ入り、ログイン成功でホーム、ホームから予約、予約完了、アンケートへ進む。ログインからはパスワード再設定と初回パスワード変更へ分岐する。">
+          <defs>
+            <marker id="mArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--muted)"/>
+            </marker>
+          </defs>
+
+          <!-- M-10 体験予約フォーム -->
+          <rect x="20" y="20" width="150" height="52" rx="9" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <text x="34" y="42" font-family="var(--mono)" font-size="10.5" fill="var(--accent)">M-10</text>
+          <text x="34" y="59" font-size="12.5" fill="var(--ink)">体験予約フォーム</text>
+
+          <!-- row 2 -->
+          <rect x="20" y="130" width="150" height="52" rx="9" fill="var(--surface)" stroke="var(--flow)" stroke-width="1.5"/>
+          <text x="34" y="152" font-family="var(--mono)" font-size="10.5" fill="var(--flow)">M-01</text>
+          <text x="34" y="169" font-size="12.5" fill="var(--ink)">会員登録</text>
+
+          <rect x="232" y="130" width="150" height="52" rx="9" fill="var(--surface)" stroke="var(--flow)" stroke-width="1.5"/>
+          <text x="246" y="152" font-family="var(--mono)" font-size="10.5" fill="var(--flow)">M-02</text>
+          <text x="246" y="169" font-size="12.5" fill="var(--ink)">会員ログイン</text>
+
+          <rect x="444" y="130" width="150" height="52" rx="9" fill="var(--surface)" stroke="var(--flow)" stroke-width="1.5"/>
+          <text x="458" y="152" font-family="var(--mono)" font-size="10.5" fill="var(--flow)">M-03</text>
+          <text x="458" y="169" font-size="12.5" fill="var(--ink)">ホーム</text>
+
+          <rect x="656" y="130" width="150" height="52" rx="9" fill="var(--surface)" stroke="var(--flow)" stroke-width="1.5"/>
+          <text x="670" y="152" font-family="var(--mono)" font-size="10.5" fill="var(--flow)">M-04</text>
+          <text x="670" y="169" font-size="12.5" fill="var(--ink)">予約</text>
+
+          <rect x="868" y="130" width="150" height="52" rx="9" fill="var(--surface)" stroke="var(--flow)" stroke-width="1.5"/>
+          <text x="882" y="152" font-family="var(--mono)" font-size="10.5" fill="var(--flow)">M-05</text>
+          <text x="882" y="169" font-size="12.5" fill="var(--ink)">予約完了</text>
+
+          <!-- row 3 -->
+          <rect x="232" y="250" width="150" height="52" rx="9" fill="var(--surface)" stroke="var(--flow)" stroke-width="1.5"/>
+          <text x="246" y="272" font-family="var(--mono)" font-size="10.5" fill="var(--flow)">M-08</text>
+          <text x="246" y="289" font-size="12.5" fill="var(--ink)">パスワード再設定</text>
+
+          <rect x="444" y="250" width="150" height="52" rx="9" fill="var(--surface)" stroke="var(--flow)" stroke-width="1.5"/>
+          <text x="458" y="272" font-family="var(--mono)" font-size="10.5" fill="var(--flow)">M-09</text>
+          <text x="458" y="289" font-size="12.5" fill="var(--ink)">初回パスワード変更</text>
+
+          <rect x="656" y="250" width="150" height="52" rx="9" fill="var(--amber-bg)" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <text x="670" y="272" font-family="var(--mono)" font-size="10.5" fill="var(--amber)">M-07</text>
+          <text x="670" y="289" font-size="12.5" fill="var(--ink)">記録 / マイページ</text>
+
+          <rect x="868" y="250" width="150" height="52" rx="9" fill="var(--surface)" stroke="var(--flow)" stroke-width="1.5"/>
+          <text x="882" y="272" font-family="var(--mono)" font-size="10.5" fill="var(--flow)">M-06</text>
+          <text x="882" y="289" font-size="12.5" fill="var(--ink)">ご意見アンケート</text>
+
+          <!-- row 4 -->
+          <rect x="868" y="360" width="150" height="44" rx="9" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/>
+          <text x="882" y="387" font-size="12.5" fill="var(--muted)">送信完了</text>
+
+          <!-- arrows -->
+          <line x1="95" y1="72" x2="95" y2="128" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#mArrow)"/>
+          <text x="103" y="106" font-size="9.5" fill="var(--muted)">入会後</text>
+
+          <line x1="170" y1="156" x2="230" y2="156" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#mArrow)"/>
+          <text x="200" y="148" font-size="9" fill="var(--muted)" text-anchor="middle">登録完了</text>
+
+          <line x1="382" y1="156" x2="442" y2="156" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#mArrow)"/>
+          <text x="412" y="148" font-size="9" fill="var(--muted)" text-anchor="middle">ログイン成功</text>
+
+          <line x1="594" y1="156" x2="654" y2="156" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#mArrow)"/>
+          <text x="624" y="148" font-size="9" fill="var(--muted)" text-anchor="middle">予約タブ</text>
+
+          <line x1="806" y1="156" x2="866" y2="156" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#mArrow)"/>
+          <text x="836" y="148" font-size="9" fill="var(--muted)" text-anchor="middle">予約確定</text>
+
+          <line x1="943" y1="182" x2="943" y2="248" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#mArrow)"/>
+          <text x="951" y="219" font-size="9.5" fill="var(--muted)">アンケートへ</text>
+
+          <line x1="943" y1="302" x2="943" y2="358" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#mArrow)"/>
+          <text x="951" y="334" font-size="9.5" fill="var(--muted)">送信</text>
+
+          <!-- M-02 <-> M-08 -->
+          <line x1="288" y1="182" x2="288" y2="248" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#mArrow)"/>
+          <text x="282" y="219" font-size="9.5" fill="var(--muted)" text-anchor="end">PWをお忘れ</text>
+          <line x1="326" y1="250" x2="326" y2="184" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#mArrow)"/>
+          <text x="332" y="219" font-size="9.5" fill="var(--muted)">再設定完了</text>
+
+          <!-- M-02 -> M-09 (must_change_password) -->
+          <polyline points="382,172 413,172 413,266 442,266" fill="none" stroke="var(--muted)" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#mArrow)"/>
+          <text x="419" y="202" font-size="9.5" fill="var(--muted)">仮PWでログイン時</text>
+
+          <!-- M-09 -> M-03 -->
+          <line x1="519" y1="250" x2="519" y2="184" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#mArrow)"/>
+          <text x="527" y="219" font-size="9.5" fill="var(--muted)">変更後</text>
+
+          <!-- M-03 -> M-07 -->
+          <polyline points="594,172 625,172 625,266 654,266" fill="none" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#mArrow)"/>
+          <text x="631" y="202" font-size="9.5" fill="var(--muted)">封印タブ</text>
+        </svg>
+      </div>
+      <figcaption>
+        図1 — 会員が触る10画面と、その間を動かす条件。破線は分岐(仮パスワード)と、まだ画面IDが振られていない画面。
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ======================= 管理者フロー ======================= -->
+  <section>
+    <h2><span class="num">02</span>管理者フロー</h2>
+    <p class="note">
+      ダッシュボードが7機能へのハブになります。会員に対する操作(記録の代理入力・パスワード操作)は、
+      会員一覧から会員を選んだ「会員詳細」を経由する形に揃えました。
+      こちらは店舗のタブレット / PC で使う想定のため、一覧や集計は横幅を使ったレイアウトにします。
+    </p>
+
+    <figure style="--flow: var(--admin)">
+      <div class="canvas">
+        <svg viewBox="0 0 1040 410" role="img"
+             aria-label="管理者フローの画面遷移図。管理者ログインからダッシュボードへ入り、そこから会員情報管理・記録の代理入力・予約状況の確認・アンケート集計・メニュー設定・予約枠カレンダー・トレーナー紐づけの7機能に分岐する。会員情報管理から会員詳細、さらに会員パスワード操作へ進む。">
+          <defs>
+            <marker id="aArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--muted)"/>
+            </marker>
+          </defs>
+
+          <!-- A-01 / A-07 -->
+          <rect x="20" y="150" width="160" height="52" rx="9" fill="var(--surface)" stroke="var(--flow)" stroke-width="1.5"/>
+          <text x="34" y="172" font-family="var(--mono)" font-size="10.5" fill="var(--flow)">A-01</text>
+          <text x="34" y="189" font-size="12.5" fill="var(--ink)">管理者ログイン</text>
+
+          <rect x="20" y="260" width="160" height="52" rx="9" fill="var(--surface)" stroke="var(--flow)" stroke-width="1.5"/>
+          <text x="34" y="282" font-family="var(--mono)" font-size="10.5" fill="var(--flow)">A-07</text>
+          <text x="34" y="299" font-size="12.5" fill="var(--ink)">管理者PW再設定</text>
+
+          <!-- A-02 -->
+          <rect x="250" y="150" width="170" height="52" rx="9" fill="var(--surface)" stroke="var(--flow)" stroke-width="1.5"/>
+          <text x="264" y="172" font-family="var(--mono)" font-size="10.5" fill="var(--flow)">A-02</text>
+          <text x="264" y="189" font-size="12.5" fill="var(--ink)">管理ダッシュボード</text>
+
+          <!-- bus -->
+          <line x1="420" y1="176" x2="460" y2="176" stroke="var(--muted)" stroke-width="1.4"/>
+          <line x1="460" y1="40" x2="460" y2="352" stroke="var(--muted)" stroke-width="1.4"/>
+
+          <!-- 7 functions -->
+          <rect x="490" y="20" width="200" height="40" rx="8" fill="var(--surface)" stroke="var(--flow)" stroke-width="1.5"/>
+          <text x="504" y="37" font-family="var(--mono)" font-size="10" fill="var(--flow)">A-03</text>
+          <text x="504" y="51" font-size="12" fill="var(--ink)">会員情報管理</text>
+
+          <rect x="490" y="72" width="200" height="40" rx="8" fill="var(--surface)" stroke="var(--flow)" stroke-width="1.5"/>
+          <text x="504" y="89" font-family="var(--mono)" font-size="10" fill="var(--flow)">A-04</text>
+          <text x="504" y="103" font-size="12" fill="var(--ink)">記録の代理入力</text>
+
+          <rect x="490" y="124" width="200" height="40" rx="8" fill="var(--surface)" stroke="var(--flow)" stroke-width="1.5"/>
+          <text x="504" y="141" font-family="var(--mono)" font-size="10" fill="var(--flow)">A-05</text>
+          <text x="504" y="155" font-size="12" fill="var(--ink)">予約状況の確認</text>
+
+          <rect x="490" y="176" width="200" height="40" rx="8" fill="var(--surface)" stroke="var(--flow)" stroke-width="1.5"/>
+          <text x="504" y="193" font-family="var(--mono)" font-size="10" fill="var(--flow)">A-06</text>
+          <text x="504" y="207" font-size="12" fill="var(--ink)">アンケート集計</text>
+
+          <rect x="490" y="228" width="200" height="40" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <text x="504" y="245" font-family="var(--mono)" font-size="10" fill="var(--accent)">A-09</text>
+          <text x="504" y="259" font-size="12" fill="var(--ink)">メニュー設定</text>
+
+          <rect x="490" y="280" width="200" height="40" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <text x="504" y="297" font-family="var(--mono)" font-size="10" fill="var(--accent)">A-10</text>
+          <text x="504" y="311" font-size="12" fill="var(--ink)">予約枠カレンダー</text>
+
+          <rect x="490" y="332" width="200" height="40" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <text x="504" y="349" font-family="var(--mono)" font-size="10" fill="var(--accent)">A-11</text>
+          <text x="504" y="363" font-size="12" fill="var(--ink)">トレーナー紐づけ</text>
+
+          <!-- bus stubs -->
+          <line x1="460" y1="40"  x2="488" y2="40"  stroke="var(--muted)" stroke-width="1.4" marker-end="url(#aArrow)"/>
+          <line x1="460" y1="92"  x2="488" y2="92"  stroke="var(--muted)" stroke-width="1.4" marker-end="url(#aArrow)"/>
+          <line x1="460" y1="144" x2="488" y2="144" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#aArrow)"/>
+          <line x1="460" y1="196" x2="488" y2="196" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#aArrow)"/>
+          <line x1="460" y1="248" x2="488" y2="248" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#aArrow)"/>
+          <line x1="460" y1="300" x2="488" y2="300" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#aArrow)"/>
+          <line x1="460" y1="352" x2="488" y2="352" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#aArrow)"/>
+
+          <!-- 会員詳細 chain -->
+          <rect x="730" y="20" width="145" height="40" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <text x="744" y="37" font-family="var(--mono)" font-size="10" fill="var(--accent)">A-03d</text>
+          <text x="744" y="51" font-size="12" fill="var(--ink)">会員詳細</text>
+
+          <rect x="915" y="20" width="105" height="40" rx="8" fill="var(--surface)" stroke="var(--flow)" stroke-width="1.5"/>
+          <text x="929" y="37" font-family="var(--mono)" font-size="10" fill="var(--flow)">A-08</text>
+          <text x="929" y="51" font-size="12" fill="var(--ink)">PW操作</text>
+
+          <line x1="690" y1="40" x2="728" y2="40" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#aArrow)"/>
+          <text x="709" y="32" font-size="8.5" fill="var(--muted)" text-anchor="middle">会員選択</text>
+
+          <line x1="875" y1="40" x2="913" y2="40" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#aArrow)"/>
+
+          <!-- A-03d -> A-04 (secondary) -->
+          <polyline points="802,60 802,92 692,92" fill="none" stroke="var(--muted)" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#aArrow)"/>
+          <text x="810" y="80" font-size="8.5" fill="var(--muted)">記録を入力</text>
+
+          <!-- login arrows -->
+          <line x1="180" y1="176" x2="248" y2="176" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#aArrow)"/>
+          <text x="214" y="168" font-size="9" fill="var(--muted)" text-anchor="middle">ログイン成功</text>
+
+          <line x1="100" y1="202" x2="100" y2="258" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#aArrow)"/>
+          <text x="108" y="234" font-size="9.5" fill="var(--muted)">PWをお忘れ</text>
+        </svg>
+      </div>
+      <figcaption>
+        図2 — ダッシュボードから7機能へのハブ構造。破線の4画面は設計書に画面IDがなく、今回こちらで採番を提案しているものです。
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ======================= 予約判定 ======================= -->
+  <section>
+    <h2><span class="num">03</span>予約可否の判定(M-04 の中身)</h2>
+    <p class="note">
+      3つの課金形態で分岐するのは <strong>A の契約チェックだけ</strong>で、B の枠チェックは全形態共通です。
+      画面としては1つですが、押せる / 押せないの理由がここで決まるため、エラー文言の設計にそのまま効きます。
+    </p>
+
+    <figure>
+      <div class="canvas">
+        <svg viewBox="0 0 1040 360" role="img"
+             aria-label="予約可否の2段階判定図。枠を選択したあと、Aで課金形態別に契約をチェックし、時間課金はチェックなし、通い放題は契約期間と同時保有件数、回数券は残回数と有効期限を見る。Aを通過するとBで全形態共通の枠の空きをチェックし、予約確定に至る。いずれかで失敗するとエラー表示になる。">
+          <defs>
+            <marker id="rArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--muted)"/>
+            </marker>
+          </defs>
+
+          <!-- start -->
+          <rect x="20" y="122" width="150" height="56" rx="9" fill="var(--surface)" stroke="var(--member)" stroke-width="1.5"/>
+          <text x="34" y="145" font-family="var(--mono)" font-size="10.5" fill="var(--member)">M-04</text>
+          <text x="34" y="163" font-size="12.5" fill="var(--ink)">枠を選択</text>
+
+          <!-- A container -->
+          <rect x="212" y="20" width="300" height="262" rx="12" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="6 5"/>
+          <text x="362" y="42" font-size="12" font-family="var(--mono)" fill="var(--accent)" text-anchor="middle">A) 課金形態別チェック</text>
+
+          <rect x="232" y="58" width="260" height="58" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+          <text x="246" y="80" font-size="12" fill="var(--ink)">時間課金 (time)</text>
+          <text x="246" y="99" font-size="10.5" fill="var(--muted)">契約チェック不要・都度</text>
+
+          <rect x="232" y="128" width="260" height="58" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+          <text x="246" y="150" font-size="12" fill="var(--ink)">通い放題 (unlimited)</text>
+          <text x="246" y="169" font-size="10.5" fill="var(--muted)">期間内 かつ 同時保有 ≤ max_active</text>
+
+          <rect x="232" y="198" width="260" height="58" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+          <text x="246" y="220" font-size="12" fill="var(--ink)">回数券 (ticket)</text>
+          <text x="246" y="239" font-size="10.5" fill="var(--muted)">残回数 ≥ 1 かつ 有効期限内</text>
+
+          <line x1="170" y1="150" x2="210" y2="150" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#rArrow)"/>
+
+          <!-- converge to B -->
+          <polyline points="492,87 528,87 528,150" fill="none" stroke="var(--muted)" stroke-width="1.4"/>
+          <polyline points="492,227 528,227 528,150" fill="none" stroke="var(--muted)" stroke-width="1.4"/>
+          <line x1="492" y1="157" x2="528" y2="157" stroke="var(--muted)" stroke-width="1.4"/>
+          <line x1="528" y1="150" x2="576" y2="150" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#rArrow)"/>
+          <text x="552" y="142" font-size="9" fill="var(--muted)" text-anchor="middle">OK</text>
+
+          <!-- B -->
+          <rect x="578" y="110" width="230" height="80" rx="9" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
+          <text x="594" y="134" font-family="var(--mono)" font-size="10.5" fill="var(--accent)">B) 枠の空きチェック(共通)</text>
+          <text x="594" y="154" font-size="11.5" fill="var(--ink)">予約済 &lt; capacity</text>
+          <text x="594" y="173" font-size="11.5" fill="var(--ink)">かつ is_closed = false</text>
+
+          <!-- result -->
+          <rect x="850" y="110" width="170" height="80" rx="9" fill="var(--surface)" stroke="var(--member)" stroke-width="1.5"/>
+          <text x="866" y="138" font-size="12.5" fill="var(--ink)">予約を確定</text>
+          <text x="866" y="160" font-size="10.5" fill="var(--muted)">枠を1つ消費</text>
+          <text x="866" y="177" font-size="10.5" fill="var(--muted)">回数券は残回数 −1</text>
+
+          <line x1="808" y1="150" x2="848" y2="150" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#rArrow)"/>
+
+          <!-- NG -->
+          <rect x="300" y="300" width="430" height="44" rx="9" fill="var(--danger-bg)" stroke="var(--danger)" stroke-width="1.5"/>
+          <text x="318" y="328" font-size="12" fill="var(--danger)">予約不可 — 契約期間外 / 残回数なし / 満席・クローズ</text>
+
+          <line x1="362" y1="282" x2="362" y2="298" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#rArrow)"/>
+          <text x="370" y="295" font-size="9" fill="var(--muted)">A で NG</text>
+
+          <polyline points="693,190 693,298" fill="none" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#rArrow)"/>
+          <text x="701" y="250" font-size="9" fill="var(--muted)">B で NG(満席)</text>
+        </svg>
+      </div>
+      <figcaption>
+        図3 — 判定は A(課金形態別)→ B(共通)の順。同時アクセスで枠と残回数がずれないよう、A・B と更新はサーバー側の RPC で1トランザクションにまとめます。
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ======================= 画面一覧 ======================= -->
+  <section>
+    <h2><span class="num">04</span>画面一覧</h2>
+    <p class="note">
+      個別の画面設計は、この表の1行を単位に詰めていきます。
+      <span class="star">新規</span> は設計書に画面IDがなく、今回こちらで採番を提案したものです。
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>画面名</th>
+            <th>遷移元</th>
+            <th>遷移先</th>
+            <th>主な要素・条件</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="group"><td colspan="5">会員</td></tr>
+          <tr>
+            <td class="id m">M-01</td>
+            <td>会員登録</td>
+            <td class="flow">M-02 / 体験予約後</td>
+            <td class="flow">M-02</td>
+            <td>氏名・メール・パスワード(8文字以上)・生年月日</td>
+          </tr>
+          <tr>
+            <td class="id m">M-02</td>
+            <td>会員ログイン</td>
+            <td class="flow">起点 / M-01 / M-08</td>
+            <td class="flow">M-03 / M-08 / M-09</td>
+            <td><code>must_change_password = true</code> のときは M-09 を挟む</td>
+          </tr>
+          <tr>
+            <td class="id m">M-03</td>
+            <td>ホーム</td>
+            <td class="flow">M-02 / M-09</td>
+            <td class="flow">M-04 / M-07</td>
+            <td>お知らせ・予約導線。タブは 予約 / 記録(封印)/ マイページ(封印)</td>
+          </tr>
+          <tr>
+            <td class="id m">M-04</td>
+            <td>予約</td>
+            <td class="flow">M-03</td>
+            <td class="flow">M-05</td>
+            <td>メニュー選択 → カレンダー → 枠選択。判定は図3</td>
+          </tr>
+          <tr>
+            <td class="id m">M-05</td>
+            <td>予約完了</td>
+            <td class="flow">M-04</td>
+            <td class="flow">M-06 / M-03</td>
+            <td>予約内容の控え・回数券の残数表示</td>
+          </tr>
+          <tr>
+            <td class="id m">M-06</td>
+            <td>ご意見アンケート</td>
+            <td class="flow">M-05</td>
+            <td class="flow">送信完了</td>
+            <td>回答は <code>survey_responses.answers</code>(JSONB)へ</td>
+          </tr>
+          <tr>
+            <td class="id m">M-07</td>
+            <td>記録 / マイページ<span class="lock-tag">封印</span></td>
+            <td class="flow">M-03</td>
+            <td class="flow">—</td>
+            <td>Coming Soon 表示のみ。最終モデルで解禁</td>
+          </tr>
+          <tr>
+            <td class="id m">M-08</td>
+            <td>パスワード再設定</td>
+            <td class="flow">M-02</td>
+            <td class="flow">M-02</td>
+            <td>①メール入力 ②送信完了 ③新パスワード設定。リンク有効期限60分。未登録でも「送信しました」と表示</td>
+          </tr>
+          <tr>
+            <td class="id m">M-09</td>
+            <td>初回パスワード変更</td>
+            <td class="flow">M-02</td>
+            <td class="flow">M-03</td>
+            <td>仮パスワード発行後の強制変更。完了で <code>must_change_password</code> を false に</td>
+          </tr>
+          <tr>
+            <td class="id m">M-10</td>
+            <td>体験予約フォーム<span class="star">新規</span></td>
+            <td class="flow">外部リンク</td>
+            <td class="flow">—</td>
+            <td>非ログイン。<code>trial_bookings</code> に保存。管理者が確認して来店対応</td>
+          </tr>
+
+          <tr class="group"><td colspan="5">管理者</td></tr>
+          <tr>
+            <td class="id a">A-01</td>
+            <td>管理者ログイン</td>
+            <td class="flow">起点</td>
+            <td class="flow">A-02 / A-07</td>
+            <td>role が admin / staff であることを確認。会員側とは分離</td>
+          </tr>
+          <tr>
+            <td class="id a">A-02</td>
+            <td>管理ダッシュボード</td>
+            <td class="flow">A-01</td>
+            <td class="flow">A-03〜A-06 / A-09〜A-11</td>
+            <td>7機能へのハブ</td>
+          </tr>
+          <tr>
+            <td class="id a">A-03</td>
+            <td>会員情報管理</td>
+            <td class="flow">A-02</td>
+            <td class="flow">A-03d</td>
+            <td>一覧・検索・CSV出力</td>
+          </tr>
+          <tr>
+            <td class="id a">A-03d</td>
+            <td>会員詳細<span class="star">新規</span></td>
+            <td class="flow">A-03</td>
+            <td class="flow">A-04 / A-08</td>
+            <td>会員情報の編集、記録・予約履歴、パスワード操作の入口</td>
+          </tr>
+          <tr>
+            <td class="id a">A-04</td>
+            <td>記録の代理入力</td>
+            <td class="flow">A-02 / A-03d</td>
+            <td class="flow">保存完了</td>
+            <td>会員選択・種目 / 重量 / 回数・トレーナーメモ</td>
+          </tr>
+          <tr>
+            <td class="id a">A-05</td>
+            <td>予約状況の確認</td>
+            <td class="flow">A-02</td>
+            <td class="flow">—</td>
+            <td>日付別の予約一覧・枠の消化状況</td>
+          </tr>
+          <tr>
+            <td class="id a">A-06</td>
+            <td>アンケート集計</td>
+            <td class="flow">A-02</td>
+            <td class="flow">—</td>
+            <td>回答の集計・CSVエクスポート</td>
+          </tr>
+          <tr>
+            <td class="id a">A-07</td>
+            <td>管理者パスワード再設定</td>
+            <td class="flow">A-01</td>
+            <td class="flow">A-01</td>
+            <td>セルフ(メール)。画面はネイビー基調</td>
+          </tr>
+          <tr>
+            <td class="id a">A-08</td>
+            <td>会員パスワード操作</td>
+            <td class="flow">A-03d</td>
+            <td class="flow">—</td>
+            <td>再設定メール送信(推奨)/ 仮パスワード発行。発行は <code>audit_logs</code> に記録</td>
+          </tr>
+          <tr>
+            <td class="id a">A-09</td>
+            <td>メニュー設定<span class="star">新規</span></td>
+            <td class="flow">A-02</td>
+            <td class="flow">—</td>
+            <td>3課金形態の登録・編集。time は所要時間 / ticket は回数・期限 / unlimited は同時予約上限</td>
+          </tr>
+          <tr>
+            <td class="id a">A-10</td>
+            <td>予約枠カレンダー<span class="star">新規</span></td>
+            <td class="flow">A-02</td>
+            <td class="flow">—</td>
+            <td>枠の作成・定員設定・クローズ。メニューとは独立した共通設定</td>
+          </tr>
+          <tr>
+            <td class="id a">A-11</td>
+            <td>トレーナー×メニュー紐づけ<span class="star">新規</span></td>
+            <td class="flow">A-02</td>
+            <td class="flow">—</td>
+            <td><code>staff_menus</code> の編集</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ======================= 要確認 ======================= -->
+  <section>
+    <h2><span class="num">05</span>決めていただきたいこと</h2>
+    <p class="note">画面の詳細設計に入る前に固めておきたい5点です。いずれも「こちらの案で進めてよいか」の確認です。</p>
+
+    <ol class="q">
+      <li>
+        <h3>新規採番した5画面のIDを確定してよいか</h3>
+        <p>M-10 体験予約フォーム / A-03d 会員詳細 / A-09 メニュー設定 / A-10 予約枠カレンダー / A-11 トレーナー紐づけ。いずれも 9/20版のスコープにあるのに設計書で画面IDが振られていなかったものです。</p>
+      </li>
+      <li>
+        <h3>予約完了(M-05)からアンケート(M-06)への導線は毎回出すか</h3>
+        <p>基本設計書は「アンケートは予約完了後導線」とだけ書かれています。毎回出すと煩わしいので、初回のみ / 任意のバナー表示、あたりが現実的です。</p>
+      </li>
+      <li>
+        <h3>管理者代行リセット(A-08)を実行できるロール</h3>
+        <p>パスワード再設定追補で「店舗管理者は可、スタッフは不可 等、運用に合わせて設定」として保留になったままの項目です。店舗管理者のみを既定にする想定です。</p>
+      </li>
+      <li>
+        <h3>予約(M-04)の順序は「メニュー → 日時」か「日時 → メニュー」か</h3>
+        <p>予約枠は全メニュー共通なので、どちらの順でも作れます。保有している権利(通い放題・回数券)から入るほうが会員には分かりやすいと考えており、メニュー先行を想定しています。</p>
+      </li>
+      <li>
+        <h3>体験予約フォーム(M-10)の入口</h3>
+        <p>公式サイトやSNSからの外部リンクで直接開く想定です。アプリ内のログイン画面にも導線を置くかどうかをご判断ください。</p>
+      </li>
+      <li>
+        <h3>会員側を「アプリ」としてどこまで仕上げるか</h3>
+        <p>ホーム画面にアイコンを置いてアプリのように全画面で起動する形(PWA)は 9/20版に含められます。App Store / Google Play で配信するネイティブアプリは、審査・開発者登録・実装方式の変更が必要でリリース日に間に合わないため、Phase2 での対応を想定しています。どちらを指しているかのご確認をお願いします。</p>
+      </li>
+    </ol>
+  </section>
+
+  <footer>
+    出典:基本設計書_W1成果物(3.1 画面一覧)/ 基本設計書_予約メニュー追補(2. 判定フロー、5. 画面への影響)/
+    基本設計書_パスワード再設定追補(5. 画面一覧への追加)/ demo/fitgym-demo.html。
+    実装済みの画面は M-01・M-02・M-08・A-01・A-07(認証まで)。
+  </footer>
+
+</div>
