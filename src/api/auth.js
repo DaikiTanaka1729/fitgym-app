@@ -44,12 +44,13 @@ export const authApi = {
   },
 
   // セルフ再設定:登録メールへリンクを送る(有効期限60分)
+  // ネイティブアプリでは origin が capacitor://localhost になりメールのリンクから戻れないため、
+  // Universal Links / App Links 用のURLを VITE_PASSWORD_RESET_URL で指定する。
   sendResetLink({ email }) {
-    return apiCall(() =>
-      supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + "/reset-password",
-      })
-    );
+    const redirectTo =
+      import.meta.env?.VITE_PASSWORD_RESET_URL ||
+      window.location.origin + "/reset-password";
+    return apiCall(() => supabase.auth.resetPasswordForEmail(email, { redirectTo }));
   },
 
   // 新パスワードの設定。仮パスワードからの強制変更でも同じ経路を使う。

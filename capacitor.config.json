@@ -1,0 +1,12 @@
+{
+  "appId": "jp.fitgym.app",
+  "appName": "FitGym",
+  "webDir": "dist",
+  "backgroundColor": "#ffffff",
+  "ios": {
+    "contentInset": "always"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

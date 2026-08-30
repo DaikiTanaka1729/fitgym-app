@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FitGym</string>
+    <string name="title_activity_main">FitGym</string>
+    <string name="package_name">jp.fitgym.app</string>
+    <string name="custom_url_scheme">jp.fitgym.app</string>
+</resources>

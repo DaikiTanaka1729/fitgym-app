@@ -1,0 +1,41 @@
+/* ============================================================
+   グローバルスタイル(ネイティブアプリ前提)
+   ------------------------------------------------------------
+   配色はコンポーネント側で src/theme/tokens.js から取る。
+   ここは端末に依存する挙動(セーフエリア・バウンス・タップ）だけを扱う。
+   ============================================================ */
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  /* 端末外のスクロールバウンスを止め、アプリらしい手触りにする */
+  overscroll-behavior-y: none;
+  /* タップ時の青いハイライトを消す */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ノッチ・ホームインジケータを避ける(iPhone の上下端) */
+#root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* 長押しによるテキスト選択は入力欄だけ許可する */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}

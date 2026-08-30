@@ -12,6 +12,16 @@ npm run dev
 
 http://localhost:5173 が開く。ビルドは `npm run build`。
 
+ネイティブアプリ(iOS / Android)は Capacitor で同梱している。
+Web を直したあと、下記でネイティブ側へ反映する。
+
+```bash
+npm run build && npx cap sync
+```
+
+手順とストア申請の要件は [docs/NATIVE_APP.md](./docs/NATIVE_APP.md) を参照。
+iOS のビルドには macOS が必要(Windows では不可)。
+
 Supabase の接続情報が未設定のあいだは画面上部に注意書きが出て、仮の認証(`mockAuth`)で動作する。
 接続するには `.env.example` を `.env.local` にコピーし、Supabase の Project URL と anon キーを入れる。
 
@@ -37,6 +47,8 @@ cp .env.example .env.local
 fitgimapp/
 ├── CLAUDE.md                   プロジェクトの前提・設計方針・次にやること
 ├── index.html / vite.config.js Vite + React のエントリ
+├── capacitor.config.json       ネイティブアプリの設定(appId: jp.fitgym.app)
+├── ios/ · android/             Capacitor が生成したネイティブプロジェクト
 ├── vercel.json                 SPA ルーティング用の rewrite
 ├── .env.example                環境変数のひな形(実値は .env.local へ)
 ├── src/
