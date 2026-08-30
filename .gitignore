@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+.vercel
+
+# Word/Excel の一時ロックファイル
+~$*
+
+# 引き継ぎ zip(docs/ src/ に展開済み。履歴に入れる必要なし)
+fitgym-handoff.zip

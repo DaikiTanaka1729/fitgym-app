@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FitGym デモ</title>
+<style>
+  :root{
+    --primary:#1A9E6E; --primaryDark:#16624A; --primarySoft:#EAF6F0;
+    --navy:#1E2761; --navySoft:#EDF1FA; --accent:#534AB7;
+    --danger:#D03B3B; --dangerSoft:#FCF0F0;
+    --field:#F5F7FA; --fieldBorder:#DDE2EA; --border:#E3E6EB;
+    --text:#2C2C2A; --textMute:#6B7280; --textFaint:#AAB0B8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#EEF1F5;font-family:"Yu Gothic","Hiragino Kaku Gothic ProN",system-ui,sans-serif;color:var(--text);padding:24px 16px}
+  .wrap{max-width:760px;margin:0 auto}
+  .hdr{text-align:center;margin-bottom:16px}
+  .hdr .k{font-size:11px;color:var(--textFaint);font-weight:600;letter-spacing:.05em}
+  .hdr h1{font-size:20px;font-weight:700;margin:3px 0 0}
+  .hdr .s{font-size:12px;color:var(--textMute);margin-top:4px}
+  .flowsw{display:flex;gap:8px;justify-content:center;margin-bottom:8px}
+  .flowsw button{padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:#fff;color:var(--textMute)}
+  .flowsw button.on-m{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .flowsw button.on-a{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .phonewrap{display:flex;justify-content:center}
+  .phone{width:330px;background:#fff;border-radius:26px;overflow:hidden;box-shadow:0 8px 30px rgba(20,30,50,.16);border:5px solid #12151A}
+  .screen{min-height:520px}
+  .head{padding:13px 15px;display:flex;align-items:center;gap:10px}
+  .head.p{background:var(--primary)} .head.n{background:var(--navy)}
+  .head .bk{color:#fff;font-size:18px;cursor:pointer;line-height:1}
+  .head .t{color:#fff;font-weight:600;font-size:14.5px}
+  .head .st{color:rgba(255,255,255,.85);font-size:10.5px}
+  .body{padding:14px}
+  .lab{font-size:11px;color:var(--textMute);font-weight:600;margin-bottom:6px}
+  .ipt{background:var(--field);border:1px solid var(--fieldBorder);border-radius:8px;padding:10px 11px;font-size:12.5px;margin-bottom:12px}
+  .btn{width:100%;height:44px;border:none;border-radius:9px;font-size:13.5px;font-weight:600;font-family:inherit;cursor:pointer;color:#fff}
+  .btn.p{background:var(--primary)} .btn.n{background:var(--navy)}
+  .btn.ghost{background:#fff;color:var(--primary);border:1px solid var(--primary)}
+  .btn.ghostn{background:#fff;color:var(--navy);border:1px solid var(--navy)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  .chip{border:1px solid var(--fieldBorder);background:#fff;color:var(--textMute);border-radius:9px;padding:10px 6px;text-align:center;font-size:11.5px;cursor:pointer}
+  .chip.on{border-color:var(--primary);background:var(--primarySoft);color:var(--primaryDark);font-weight:600}
+  .note{background:var(--field);border-radius:9px;padding:11px;font-size:11px;color:var(--textMute);line-height:1.6}
+  .card{background:#fff;border:1px solid var(--border);border-radius:11px;padding:12px}
+  .row{background:#fff;border:1px solid var(--border);border-radius:11px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer}
+  .center{text-align:center}
+  .jump{margin-top:16px;text-align:center}
+  .jump .cur{font-size:11px;color:var(--textMute);margin-bottom:8px}
+  .jump .btns{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+  .jump .btns button{padding:5px 11px;border-radius:14px;font-size:11px;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:#fff;color:var(--textMute)}
+  .foot{font-size:10.5px;color:var(--textFaint);margin-top:16px;text-align:center;line-height:1.7}
+  .toggle{width:44px;height:26px;border-radius:13px;position:relative;cursor:pointer;flex-shrink:0}
+  .toggle .kn{position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .15s}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <div class="k">FITGYM · デモ プロトタイプ</div>
+    <h1>画面遷移デモ</h1>
+    <div class="s">ボタンをタップすると画面が切り替わります(データは仮)</div>
+  </div>
+  <div class="flowsw">
+    <button id="fm" onclick="switchFlow('member')">会員アプリ</button>
+    <button id="fa" onclick="switchFlow('admin')">管理者アプリ</button>
+  </div>
+  <div class="phonewrap"><div class="phone"><div class="screen" id="screen"></div></div></div>
+  <div class="jump">
+    <div class="cur">現在の画面:<span id="curlabel" style="font-weight:700"></span></div>
+    <div class="btns" id="jumpbtns"></div>
+  </div>
+  <div class="foot">
+    これは画面遷移を体験するためのデモです。表示データは仮のもので、実際の登録・保存は行われません。<br>
+    会員アプリはライトテーマ、管理者アプリはネイビーで区別しています。
+  </div>
+</div>
+
+<script>
+const T={primary:"#1A9E6E",primaryDark:"#16624A",primarySoft:"#EAF6F0",navy:"#1E2761",navySoft:"#EDF1FA",accent:"#534AB7",danger:"#D03B3B",dangerSoft:"#FCF0F0",field:"#F5F7FA",fieldBorder:"#DDE2EA",border:"#E3E6EB",text:"#2C2C2A",textMute:"#6B7280",textFaint:"#AAB0B8"};
+
+// ---- global state ----
+let flow="member", screen="login";
+const st={
+  useTicket:true, rMenu:0, rDay:null, rTime:null,        // 会員予約
+  star:4, ease:0,                                         // アンケート
+  showTimeline:false,                                     // ダッシュボード
+  calDay:15, calEditing:null,                             // カレンダー
+  cal:{
+    12:{"09:00":{cap:3,booked:1,closed:0},"09:30":{cap:3,booked:0,closed:0},"10:00":{cap:2,booked:0,closed:0},"10:30":{cap:3,booked:0,closed:3},"11:00":{cap:2,booked:1,closed:0},"11:30":{cap:3,booked:3,closed:0}},
+    15:{"09:00":{cap:3,booked:0,closed:0},"09:30":{cap:3,booked:2,closed:0},"10:00":{cap:3,booked:1,closed:1},"10:30":{cap:2,booked:0,closed:0},"11:00":{cap:3,booked:2,closed:0},"11:30":{cap:2,booked:0,closed:0}},
+    16:{"09:00":{cap:3,booked:0,closed:3},"09:30":{cap:3,booked:1,closed:0},"10:00":{cap:2,booked:2,closed:0},"10:30":{cap:3,booked:0,closed:0},"11:00":{cap:3,booked:0,closed:1},"11:30":{cap:2,booked:0,closed:0}}
+  },
+  trSel:0,
+  trLinks:{0:{"パーソナル60分":1,"体幹強化60分":1,"ヨガ60分":0,"体験90分":1},1:{"パーソナル60分":1,"体幹強化60分":0,"ヨガ60分":1,"体験90分":1},2:{"パーソナル60分":1,"体幹強化60分":1,"ヨガ60分":0,"体験90分":0}}
+};
+
+const labels={login:"ログイン",home:"ホーム",reserve:"予約",done:"予約完了",survey:"アンケート",thanks:"送信完了",
+  alogin:"管理者ログイン",adash:"ダッシュボード",amembers:"会員管理",arecord:"記録入力",arecorddone:"保存完了",acalendar:"予約枠カレンダー",atrainer:"トレーナー紐づけ"};
+const memberScreens=["login","home","reserve","done","survey","thanks"];
+const adminScreens=["alogin","adash","amembers","arecord","arecorddone","acalendar","atrainer"];
+
+function go(s){screen=s;render();}
+function switchFlow(f){flow=f;screen=f==="member"?"login":"alogin";render();}
+
+// ---- helpers ----
+const esc=s=>s;
+function headHTML(title,sub,navy,back){
+  return `<div class="head ${navy?'n':'p'}">${back?`<span class="bk" onclick="go('${back}')">‹</span>`:''}<div><div class="t">${title}</div>${sub?`<div class="st">${sub}</div>`:''}</div></div>`;
+}
+function checkSVG(navy){const c=navy?T.navy:T.primary,s=navy?T.navySoft:T.primarySoft;return `<svg width="52" height="52" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="${s}"/><path d="M7.5 12.5l3 3 6-6.5" stroke="${c}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;}
+
+// ---- member screens ----
+function scLogin(){return headHTML("FitGym","ログイン",false)+`<div class="body">
+  <div class="center" style="margin:8px 0 18px">
+    <div style="width:54px;height:54px;border-radius:15px;background:${T.primarySoft};display:inline-flex;align-items:center;justify-content:center">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M6.5 6.5v11M17.5 6.5v11M4 9v6M20 9v6M6.5 12h11" stroke="${T.primary}" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+    <div style="font-size:17px;font-weight:700;margin-top:8px">FitGym</div>
+    <div style="font-size:11px;color:${T.textMute}">トレーニング予約アプリ</div>
+  </div>
+  <div class="lab">メールアドレス</div><div class="ipt">tanaka@example.com</div>
+  <div class="lab">パスワード</div><div class="ipt">••••••••</div>
+  <div style="height:6px"></div>
+  <button class="btn p" onclick="go('home')">ログイン</button>
+  <div class="center" style="font-size:11px;color:${T.accent};margin:12px 0;cursor:pointer">パスワードをお忘れの方</div>
+  <div style="border-top:1px solid ${T.border};margin:6px 0 12px"></div>
+  <button class="btn ghost" onclick="go('home')">はじめての方は会員登録</button>
+</div>`;}
+
+function scHome(){return headHTML("こんにちは、田中さん","新宿店",false)+`<div class="body">
+  <div style="background:${T.primarySoft};border-radius:12px;padding:14px;margin-bottom:14px">
+    <div style="font-size:11px;color:${T.primaryDark};font-weight:600">チケット残</div>
+    <div style="font-size:26px;font-weight:700;color:${T.primaryDark};line-height:1.2">8<span style="font-size:13px"> 回</span></div>
+    <div style="font-size:10.5px;color:${T.primary}">10回券・有効期限 2027/2/15</div>
+  </div>
+  <div style="font-size:12px;font-weight:700;margin-bottom:8px">お知らせ</div>
+  ${["年末年始の営業時間について","新メニュー「体幹強化60分」追加"].map((n,i)=>`<div style="background:#fff;border:1px solid ${T.border};border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:8px"><span style="color:${T.textFaint};font-size:10px;margin-right:6px">12/${10+i}</span>${n}</div>`).join("")}
+  <div style="height:8px"></div>
+  <button class="btn p" onclick="go('reserve')">予約する</button>
+  ${tabHTML("reserve")}
+</div>`;}
+
+function tabHTML(active){
+  const tabs=[["reserve","予約",false],["record","記録",true],["mypage","マイページ",true]];
+  return `<div style="display:flex;border-top:1px solid ${T.border};margin-top:14px">${tabs.map(([k,l,lock])=>`<div onclick="${lock?'':`go('home')`}" style="flex:1;text-align:center;padding:10px 0;font-size:11px;color:${k===active?T.primary:T.textFaint};font-weight:${k===active?600:400};display:flex;flex-direction:column;align-items:center;gap:2px;cursor:${lock?'default':'pointer'}"><span>${l}</span>${lock?`<span style="font-size:8px;color:${T.textFaint}">🔒 近日公開</span>`:''}</div>`).join("")}</div>`;
+}
+
+function scReserve(){
+  const menus=["パーソナル60分","体幹強化60分"];
+  const avail={12:"空",13:"満",14:"空",15:"空",16:"空"};
+  const slotsByDay={12:[["9:00",0],["9:30",1],["10:00",1],["10:30",0],["11:00",1],["11:30",1]],14:[["9:00",1],["9:30",0],["10:00",0],["10:30",1],["11:00",1],["11:30",0]],15:[["9:00",1],["9:30",1],["10:00",1],["10:30",0],["11:00",1],["11:30",1]],16:[["9:00",0],["9:30",1],["10:00",1],["10:30",1],["11:00",0],["11:30",1]]};
+  let h=headHTML("予約",st.useTicket?"チケット残 8回":"都度払い",false,"home")+`<div class="body">
+  <div class="lab">メニュー</div>
+  <div class="grid2" style="margin-bottom:14px">${menus.map((m,i)=>`<div class="chip ${st.rMenu===i?'on':''}" onclick="st.rMenu=${i};render()">${m}</div>`).join("")}</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;background:${T.field};border:1px solid ${T.fieldBorder};border-radius:9px;padding:10px 12px;margin-bottom:14px">
+    <div><div style="font-size:12px;font-weight:600">チケットを使う</div><div style="font-size:10px;color:${T.textMute}">${st.useTicket?"予約時にチケットを1回消化します":"チケットを消化しません(都度払い)"}</div></div>
+    <div class="toggle" style="background:${st.useTicket?T.primary:T.fieldBorder}" onclick="st.useTicket=!st.useTicket;render()"><div class="kn" style="left:${st.useTicket?21:3}px"></div></div>
+  </div>
+  <div class="lab">日付(12月)</div>
+  <div class="grid5" style="margin-bottom:14px">${[12,13,14,15,16].map(d=>{const full=avail[d]==="満";const sel=d===st.rDay;return `<div onclick="${full?'':`pickDay(${d})`}" style="border-radius:8px;padding:8px 0;text-align:center;cursor:${full?'default':'pointer'};background:${sel?T.primary:full?T.dangerSoft:T.primarySoft};color:${sel?'#fff':full?T.danger:T.primary}"><div style="font-size:13px;font-weight:600">${d}</div><div style="font-size:8.5px">${avail[d]}</div></div>`;}).join("")}</div>`;
+  if(!st.rDay){h+=`<div style="background:${T.field};border-radius:9px;padding:16px 11px;font-size:11.5px;color:${T.textMute};text-align:center;margin-bottom:14px">日付を選ぶと空き枠(30分単位)が表示されます</div>`;}
+  else{const slots=slotsByDay[st.rDay];h+=`<div class="lab">12/${st.rDay}(金) の空き枠 ・ 30分単位</div><div class="grid3" style="margin-bottom:14px">${slots.map(([lb,open])=>{const sel=st.rTime===lb;return `<div onclick="${open?`st.rTime='${lb}';render()`:''}" style="border-radius:8px;padding:9px 0;text-align:center;font-size:12px;cursor:${open?'pointer':'default'};border:1px solid ${sel?T.primary:open?T.fieldBorder:'transparent'};background:${sel?T.primary:open?'#fff':T.dangerSoft};color:${sel?'#fff':open?T.text:T.danger};font-weight:${sel?600:400}">${lb}<div style="font-size:8.5px;margin-top:1px">${open?"空き":"満"}</div></div>`;}).join("")}</div>`;}
+  const ready=st.rDay&&st.rTime;
+  h+=`<div style="background:${T.field};border-radius:9px;padding:11px;font-size:11.5px;color:${ready?T.text:T.textFaint};margin-bottom:14px">${ready?`選択:12/${st.rDay}(金) ${st.rTime} ／ ${menus[st.rMenu]}${st.useTicket?" ／ チケット1回消化":" ／ 都度払い"}`:"メニュー・日付・時間を選んでください"}</div>
+  <button class="btn p" onclick="${ready?`go('done')`:''}">この内容で予約する</button></div>`;
+  return h;
+}
+function pickDay(d){st.rDay=d;st.rTime=null;render();}
+
+function scDone(){const rows=[["メニュー","パーソナル60分"],["日時","12/15(金) 10:00"],["店舗","新宿店"],["お支払い","チケット1回 / 残7回"]];
+  return headHTML("予約完了","ご予約を承りました",false)+`<div class="body center">
+  <div style="margin:10px 0">${checkSVG(false)}</div>
+  <div style="font-size:15px;font-weight:700">予約が完了しました</div>
+  <div style="background:${T.field};border-radius:11px;padding:14px;margin:14px 0;text-align:left">
+  ${rows.map((r,i)=>`<div style="display:flex;justify-content:space-between;padding:5px 0;${i===3?`border-top:1px solid ${T.border};margin-top:3px`:''}"><span style="font-size:11.5px;color:${T.textMute}">${r[0]}</span><span style="font-size:11.5px;color:${i===3?T.primary:T.text};font-weight:${i===3?700:400}">${r[1]}</span></div>`).join("")}
+  </div>
+  <button class="btn p" onclick="go('survey')">アンケートに答える</button>
+  <div style="height:8px"></div>
+  <button class="btn ghost" onclick="go('home')">ホームに戻る</button></div>`;}
+
+function scSurvey(){return headHTML("ご意見アンケート","サービス向上にご協力ください",false,"home")+`<div class="body">
+  <div class="lab">総合満足度</div>
+  <div style="display:flex;gap:5px;margin-bottom:16px;font-size:26px">${[1,2,3,4,5].map(s=>`<span onclick="st.star=${s};render()" style="color:${s<=st.star?T.primary:T.fieldBorder};cursor:pointer">★</span>`).join("")}</div>
+  <div class="lab">予約のしやすさ</div>
+  <div class="grid3" style="margin-bottom:16px">${["満足","普通","不満"].map((l,i)=>`<div class="chip ${st.ease===i?'on':''}" onclick="st.ease=${i};render()">${l}</div>`).join("")}</div>
+  <div class="lab">ご意見(任意)</div>
+  <div style="background:${T.field};border:1px solid ${T.fieldBorder};border-radius:8px;padding:11px;font-size:11.5px;color:${T.textFaint};height:46px;margin-bottom:14px">スタッフの対応がとても良かったです</div>
+  <button class="btn p" onclick="go('thanks')">回答を送信する</button></div>`;}
+
+function scThanks(){return headHTML("送信完了","",false)+`<div class="body center">
+  <div style="margin:16px 0">${checkSVG(false)}</div>
+  <div style="font-size:15px;font-weight:700">ご回答ありがとうございました</div>
+  <div style="font-size:12px;color:${T.textMute};margin-top:6px;line-height:1.6">いただいたご意見は<br>サービス向上に役立てます。</div>
+  <div style="height:20px"></div>
+  <button class="btn p" onclick="go('home')">ホームに戻る</button></div>`;}
+
+// ---- admin screens ----
+function scALogin(){return headHTML("FitGym 管理コンソール","管理者ログイン",true)+`<div class="body">
+  <div class="center" style="margin:8px 0 16px">
+    <div style="width:50px;height:50px;border-radius:14px;background:${T.navySoft};display:inline-flex;align-items:center;justify-content:center;font-size:22px">🏢</div>
+    <div style="font-size:13px;font-weight:700;margin-top:8px;color:${T.navy}">運営者向け管理画面</div>
+  </div>
+  <div class="lab">管理者ID / メール</div><div class="ipt">admin@fitgym.jp</div>
+  <div class="lab">パスワード</div><div class="ipt">••••••••</div>
+  <div style="height:6px"></div>
+  <button class="btn n" onclick="go('adash')">ログイン</button></div>`;}
+
+function scADash(){
+  const items=[["members","会員情報管理","一覧・検索・詳細","👥","amembers"],["record","記録の代理入力","種目・重量・メモ","📝","arecord"],["calendar","予約枠カレンダー","空き枠の開閉","📅","acalendar"],["trainer","トレーナー × メニュー","担当メニューの設定","🧑‍🏫","atrainer"],["survey","アンケート集計","回答の集計・出力","📊","adash"]];
+  const booked=[["09:00","田中"],["09:30","佐藤"],["10:00","山田"],["11:00","鈴木"],["14:00","高橋"],["14:30","伊藤"],["16:00","渡辺"],["18:00","中村"],["18:30","小林"],["19:00","加藤"],["19:30","吉田"],["20:00","山本"]];
+  const bset={};booked.forEach(b=>bset[b[0]]=b[1]);
+  let h=headHTML("管理ダッシュボード","新宿店 / 店舗管理者",true)+`<div class="body">
+  <div class="grid2" style="margin-bottom:12px">
+    <div class="card" style="cursor:pointer;${st.showTimeline?`background:${T.navySoft};border-color:${T.navy}`:''}" onclick="st.showTimeline=!st.showTimeline;render()">
+      <div style="font-size:10.5px;color:${T.textMute};display:flex;justify-content:space-between">本日の予約 <span style="color:${T.navy}">${st.showTimeline?'▲':'▼'}</span></div>
+      <div style="font-size:21px;font-weight:700;color:${T.navy}">12件</div>
+    </div>
+    <div class="card"><div style="font-size:10.5px;color:${T.textMute}">新規会員(今月)</div><div style="font-size:21px;font-weight:700;color:${T.primary}">8名</div></div>
+  </div>`;
+  if(st.showTimeline){
+    let rows="";
+    for(let hh=0;hh<24;hh++){const p=String(hh).padStart(2,"0");const b0=bset[p+":00"],b3=bset[p+":30"];
+      rows+=`<div style="display:flex;align-items:center;gap:6px"><div style="width:30px;font-size:9.5px;color:${T.textMute};text-align:right;flex-shrink:0">${p}時</div><div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:2px"><div style="height:15px;border-radius:3px;background:${b0?T.navy:T.field};display:flex;align-items:center;justify-content:center">${b0?`<span style="font-size:8px;color:#fff">${b0}</span>`:''}</div><div style="height:15px;border-radius:3px;background:${b3?T.navy:T.field};display:flex;align-items:center;justify-content:center">${b3?`<span style="font-size:8px;color:#fff">${b3}</span>`:''}</div></div></div>`;}
+    h+=`<div class="card" style="margin-bottom:12px"><div style="font-size:11.5px;font-weight:700;margin-bottom:10px">本日のタイムライン(24時間)</div><div style="display:flex;flex-direction:column;gap:2px">${rows}</div><div style="display:flex;gap:14px;margin-top:10px;font-size:9.5px;color:${T.textMute}"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${T.navy};margin-right:4px;vertical-align:middle"></span>予約あり</span><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${T.field};margin-right:4px;vertical-align:middle"></span>空き</span><span style="margin-left:auto">左=00分 / 右=30分</span></div></div>`;
+  }
+  h+=items.map(it=>`<div class="row" onclick="go('${it[4]}')"><span style="font-size:20px">${it[3]}</span><div style="flex:1"><div style="font-size:13px;font-weight:600">${it[1]}</div><div style="font-size:10.5px;color:${T.textMute}">${it[2]}</div></div><span style="color:${T.textFaint};font-size:16px">›</span></div>`).join("");
+  h+=`</div>`;return h;
+}
+
+function scAMembers(){const rows=[["YG0123","田中 大貴","プレミアム"],["YG0124","佐藤 美咲","通常会員"],["YG0125","山田 健一","回数券"]];
+  return headHTML("会員情報管理","登録会員 128名",true,"adash")+`<div class="body">
+  <div style="background:${T.field};border:1px solid ${T.fieldBorder};border-radius:8px;padding:9px 11px;font-size:12px;color:${T.textFaint};margin-bottom:12px">🔍 会員を検索</div>
+  <div style="border:1px solid ${T.border};border-radius:11px;overflow:hidden">
+    <div style="display:grid;grid-template-columns:1fr 1.3fr 1fr;background:${T.navy}">${["会員No","氏名","グレード"].map(x=>`<div style="color:#fff;font-size:10.5px;font-weight:600;padding:8px 10px">${x}</div>`).join("")}</div>
+    ${rows.map((r,i)=>`<div onclick="go('arecord')" style="display:grid;grid-template-columns:1fr 1.3fr 1fr;background:${i%2?'#FAFBFC':'#fff'};cursor:pointer;${i?`border-top:1px solid #EEF0F3`:''}">${r.map(c=>`<div style="font-size:11.5px;padding:10px">${c}</div>`).join("")}</div>`).join("")}
+  </div>
+  <div style="font-size:10.5px;color:${T.textFaint};margin-top:10px;text-align:center">会員をタップすると記録入力へ(デモ)</div></div>`;}
+
+function scARecord(){return headHTML("トレーニング記録入力","田中 大貴 (YG0123)",true,"amembers")+`<div class="body">
+  <div class="lab">実施日</div><div class="ipt">2026 / 08 / 15</div>
+  <div class="lab">種目</div>
+  ${[["ベンチプレス","80kg × 5 × 3"],["ダンベルフライ","20kg × 12 × 3"]].map(x=>`<div style="background:${T.field};border-radius:8px;padding:9px 11px;font-size:11.5px;margin-bottom:6px">${x[0]} <span style="color:${T.textMute}">${x[1]}</span></div>`).join("")}
+  <div style="border:1px dashed ${T.fieldBorder};border-radius:8px;padding:9px;text-align:center;font-size:11.5px;color:${T.accent};margin:4px 0 12px;cursor:pointer">+ 種目を追加</div>
+  <div style="font-size:11px;color:${T.primary};font-weight:600;margin-bottom:6px">💬 会員へのメモ(トレーナーから)</div>
+  <div style="background:${T.primarySoft};border:1px solid #B7E0CE;border-radius:8px;padding:10px;font-size:11.5px;line-height:1.6;margin-bottom:12px">フォーム安定してきました。次回はベンチ82.5kgに挑戦しましょう。</div>
+  <button class="btn n" onclick="go('arecorddone')">記録を保存</button></div>`;}
+
+function scARecordDone(){return headHTML("保存完了","",true)+`<div class="body center">
+  <div style="margin:16px 0">${checkSVG(true)}</div>
+  <div style="font-size:15px;font-weight:700">記録を保存しました</div>
+  <div style="font-size:12px;color:${T.textMute};margin-top:6px">田中 大貴さんの記録を登録しました。</div>
+  <div style="height:20px"></div>
+  <button class="btn n" onclick="go('amembers')">会員一覧に戻る</button>
+  <div style="height:8px"></div>
+  <button class="btn ghostn" onclick="go('adash')">ダッシュボードへ</button></div>`;}
+
+function scACalendar(){
+  const slots=st.cal[st.calDay];
+  const openC=s=>s.cap-s.booked-s.closed;
+  let h=headHTML("予約枠カレンダー","空き枠の開閉(定員単位)",true,"adash")+`<div class="body">
+  <div class="lab">日付(12月)</div>
+  <div class="grid3" style="margin-bottom:14px">${[12,15,16].map(d=>`<div onclick="st.calDay=${d};st.calEditing=null;render()" style="border-radius:8px;padding:9px 0;text-align:center;cursor:pointer;background:${d===st.calDay?T.navy:T.navySoft};color:${d===st.calDay?'#fff':T.navy};font-weight:600;font-size:12.5px">12/${d}</div>`).join("")}</div>
+  <div class="lab">12/${st.calDay} の枠 ・ タップで定員を調整</div>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">`;
+  for(const t of Object.keys(slots)){const s=slots[t];const open=openC(s);const ed=st.calEditing===t;const maxC=s.cap-s.booked;
+    let bars="";for(let i=0;i<s.cap;i++){let bg=T.primarySoft,bd="#B7E0CE";if(i<s.booked){bg=T.navy;bd=T.navy;}else if(i>=s.cap-s.closed){bg=T.field;bd=T.fieldBorder;}bars+=`<div style="flex:1;height:18px;border-radius:4px;background:${bg};border:1px solid ${bd}"></div>`;}
+    h+=`<div style="border:1px solid ${ed?T.navy:T.border};border-radius:10px;overflow:hidden">
+      <div onclick="st.calEditing='${ed?'':t}';render()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;background:${ed?T.navySoft:'#fff'}">
+        <div style="font-size:13.5px;font-weight:700;width:48px">${t}</div>
+        <div style="flex:1;display:flex;gap:3px">${bars}</div>
+        <div style="font-size:10px;color:${T.textMute};text-align:right;width:46px">空き${open}/${s.cap}</div>
+      </div>`;
+    if(ed){h+=`<div style="padding:12px;border-top:1px solid ${T.border};background:#fff">
+        <div style="font-size:10.5px;color:${T.textMute};margin-bottom:8px">予約済み ${s.booked} ／ 定員 ${s.cap}。閉じる数を選んでください(最大 ${maxC})。</div>
+        <div style="display:flex;align-items:center;gap:10px;justify-content:center">
+          <div onclick="setClosed('${t}',${s.closed-1})" style="width:34px;height:34px;border-radius:8px;background:${T.field};border:1px solid ${T.fieldBorder};display:flex;align-items:center;justify-content:center;font-size:18px;color:${T.navy};cursor:pointer">−</div>
+          <div style="text-align:center;min-width:64px"><div style="font-size:20px;font-weight:700;color:${T.navy}">${s.closed}</div><div style="font-size:9px;color:${T.textMute}">枠を閉じる</div></div>
+          <div onclick="setClosed('${t}',${s.closed+1})" style="width:34px;height:34px;border-radius:8px;background:${T.navy};display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;cursor:pointer">+</div>
+        </div>
+        <div style="font-size:10px;color:${open===0?T.danger:T.primary};text-align:center;margin-top:8px">→ 閉じた後の空き:${open} 枠${open===0?"(満・予約不可)":""}</div>
+      </div>`;}
+    h+=`</div>`;
+  }
+  h+=`</div>
+  <div style="display:flex;gap:12px;font-size:9.5px;color:${T.textMute};margin-bottom:12px">
+    <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${T.primarySoft};border:1px solid #B7E0CE;margin-right:4px;vertical-align:middle"></span>空き</span>
+    <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${T.navy};margin-right:4px;vertical-align:middle"></span>予約済み</span>
+    <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${T.field};border:1px solid ${T.fieldBorder};margin-right:4px;vertical-align:middle"></span>クローズ</span>
+  </div>
+  <div class="note">各枠には定員(受入人数)があります。枠をタップして「閉じる数」を選ぶと、その分だけ予約不可になります。予約済みの枠は閉じられません。</div></div>`;
+  return h;
+}
+function setClosed(t,c){const s=st.cal[st.calDay][t];const maxC=s.cap-s.booked;s.closed=Math.max(0,Math.min(c,maxC));render();}
+
+function scATrainer(){
+  const trainers=["佐藤 健","鈴木 彩","田村 涼"];
+  const allMenus=["パーソナル60分","体幹強化60分","ヨガ60分","体験90分"];
+  const links=st.trLinks[st.trSel];
+  const count=Object.values(links).filter(v=>v).length;
+  return headHTML("トレーナー × メニュー","担当メニューの設定",true,"adash")+`<div class="body">
+  <div class="lab">トレーナーを選択</div>
+  <div class="grid3" style="margin-bottom:16px">${trainers.map((tr,i)=>`<div onclick="st.trSel=${i};render()" style="border-radius:8px;padding:9px 4px;text-align:center;cursor:pointer;font-size:11.5px;font-weight:600;border:1px solid ${st.trSel===i?T.navy:T.fieldBorder};background:${st.trSel===i?T.navySoft:'#fff'};color:${st.trSel===i?T.navy:T.textMute}">${tr}</div>`).join("")}</div>
+  <div class="lab" style="display:flex;justify-content:space-between"><span>${trainers[st.trSel]} さんの担当メニュー</span><span style="color:${T.navy}">${count}件</span></div>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">${allMenus.map(m=>{const on=links[m];return `<div onclick="toggleLink('${m}')" style="display:flex;align-items:center;justify-content:space-between;border:1px solid ${on?T.navy:T.fieldBorder};background:${on?T.navySoft:'#fff'};border-radius:9px;padding:11px 13px;cursor:pointer"><span style="font-size:12.5px;color:${on?T.navy:T.textMute};font-weight:${on?600:400}">${m}</span><div style="width:22px;height:22px;border-radius:6px;border:1px solid ${on?T.navy:T.fieldBorder};background:${on?T.navy:'#fff'};display:flex;align-items:center;justify-content:center">${on?`<span style="color:#fff;font-size:13px">✓</span>`:''}</div></div>`;}).join("")}</div>
+  <div class="note">チェックしたメニューが、そのトレーナーの担当可能メニューになります。会員が予約する際、担当できるトレーナーだけが表示されます。</div></div>`;
+}
+function toggleLink(m){st.trLinks[st.trSel][m]=st.trLinks[st.trSel][m]?0:1;render();}
+
+// ---- router ----
+const screens={login:scLogin,home:scHome,reserve:scReserve,done:scDone,survey:scSurvey,thanks:scThanks,
+  alogin:scALogin,adash:scADash,amembers:scAMembers,arecord:scARecord,arecorddone:scARecordDone,acalendar:scACalendar,atrainer:scATrainer};
+
+function render(){
+  document.getElementById("screen").innerHTML=(screens[screen]||scLogin)();
+  document.getElementById("fm").className=flow==="member"?"on-m":"";
+  document.getElementById("fa").className=flow==="admin"?"on-a":"";
+  document.getElementById("curlabel").textContent=labels[screen]||"";
+  document.getElementById("curlabel").style.color=flow==="member"?T.primary:T.navy;
+  const list=flow==="member"?memberScreens:adminScreens;
+  document.getElementById("jumpbtns").innerHTML=list.map(k=>{
+    const on=screen===k;const c=flow==="member"?T.primary:T.navy;const sBg=flow==="member"?T.primarySoft:T.navySoft;
+    return `<button onclick="go('${k}')" style="${on?`border-color:${c};background:${sBg};color:${flow==='member'?T.primaryDark:T.navy};font-weight:600`:''}">${labels[k]}</button>`;
+  }).join("");
+}
+render();
+</script>
+</body>
+</html>
