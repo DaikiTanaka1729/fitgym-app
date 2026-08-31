@@ -12,8 +12,11 @@
 ## 技術スタック
 
 - フロントエンド:React(会員UI + 管理者UI を1アプリで権限出し分け)
-- **配布形態:ネイティブアプリ(Capacitor で iOS / Android にラップ)**。まず TestFlight での配信を目指す。
-  Web ビルド(`dist/`)をそのまま同梱するため、画面コードは Web と共通。詳細は `docs/NATIVE_APP.md`。
+- **配布形態は2段階**(詳細は `docs/NATIVE_APP.md`)。
+  - **9/20(デモ):PWA**。QRを読み取り「ホーム画面に追加」でアイコンが常駐する。審査・ストアアカウント不要。
+  - **法人化後:ネイティブアプリ**(Capacitor で iOS / Android にラップ)→ TestFlight → ストア公開。
+  同じコードベースから両方出せる。ネイティブ側のプロジェクトと CI は構築済み。
+- ストアのアカウント名義は**成田様の法人**(D-U-N-S 必要)。インフラ(Supabase/Vercel/GitHub/Resend)は開発者名義のまま。
 - ホスティング:Vercel(GitHub連携で自動デプロイ)
 - バックエンド:Supabase(PostgreSQL / 認証 / ストレージ)、**東京リージョン必須**
 - メール:Resend(パスワード再設定・通知)

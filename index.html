@@ -6,6 +6,17 @@
          user-scalable=no で入力欄フォーカス時の自動ズームを抑える。 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#1A9E6E" />
+
+    <!-- PWA:QRからURLを開き「ホーム画面に追加」でアプリとして常駐させる -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <!-- iOS はマニフェストの display だけでは全画面にならない端末があるため両方指定する -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="FitGym" />
+
     <title>FitGym</title>
   </head>
   <body>
