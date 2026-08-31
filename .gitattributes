@@ -1,0 +1,20 @@
+# 改行は LF に統一する。CRLF が混ざると CI(macOS/Linux)の shell が壊れる。
+* text=auto eol=lf
+
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.sh    text eol=lf
+*.sql   text eol=lf
+
+# Windows 専用のファイルは CRLF のまま
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+
+# バイナリ
+*.png   binary
+*.jpg   binary
+*.docx  binary
+*.xlsx  binary
+*.pdf   binary
+*.zip   binary
+*.jar   binary

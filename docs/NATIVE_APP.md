@@ -29,12 +29,10 @@ Web を直したら `npm run build && npx cap sync` で両方に反映されま�
 ### 1. Windows では iOS アプリをビルド・署名できない
 
 Apple の署名ツールが macOS でしか動かないためで、回避策はありません。
-どちらかが必要です。
+**本プロジェクトはクラウド macOS CI(GitHub Actions)で進めます。** Mac の購入・レンタルは不要です。
 
-| 手段 | 内容 | 費用 | 向き |
-|---|---|---|---|
-| **Mac を用意** | Mac mini / MacBook に Xcode を入れる | 実機なら10万円前後、レンタルなら月1〜2万円 | 継続的に開発するなら確実 |
-| **クラウドmacOS CI** | GitHub Actions の macOS ランナー等でビルドし TestFlight へ自動アップロード | GitHub Actions は従量(private リポジトリは macOS 分数が10倍消費) | Mac を持たずに回すならこれ |
+ワークフローは [.github/workflows/ios-testflight.yml](../.github/workflows/ios-testflight.yml) に用意済みです。
+設定手順は下の「CI の設定」を参照してください。
 
 Capacitor 8 は CocoaPods ではなく Swift Package Manager 構成なので、CI 側の準備は比較的軽く済みます。
 
@@ -57,6 +55,61 @@ TestFlight は Apple Developer Program に入っていないと使えません�
 
 **成田様は「内部テスター」として App Store Connect に招待する**のが最短です。
 成田様側で Apple ID と、iPhone への TestFlight アプリのインストールが必要になります。
+
+---
+
+## CI の設定(クラウド macOS ビルド)
+
+Mac が無くても iOS アプリをビルドして TestFlight へ上げられます。
+署名は **App Store Connect API キー**に任せ、Xcode 側に証明書とプロビジョニングプロファイルを
+自動生成させる方式にしました(`-allowProvisioningUpdates`)。
+そのため、**証明書(.p12)を手元で作って登録する作業は不要**です。ここが一番つまずくところなので、避けてあります。
+
+### 手順
+
+**① Apple Developer Program の承認を待つ**(前述。ここが通らないと先に進めません)
+
+**② App Store Connect にアプリを登録する**(ブラウザのみ。Mac 不要)
+1. [App Store Connect](https://appstoreconnect.apple.com) → 「マイ App」→ 「+」
+2. プラットフォーム:iOS / 名前:FitGym / 主要言語:日本語
+3. バンドルID:`jp.fitgym.app`(先に Developer サイトの Identifiers で登録が必要)
+4. SKU:任意の管理用文字列(例:`fitgym-app-001`)
+
+**③ API キーを発行する**(ブラウザのみ)
+1. App Store Connect →「ユーザとアクセス」→「インテグレーション」→ App Store Connect API
+2. 「+」でキーを生成。アクセス権は **App Manager 以上**(証明書を自動生成させるため必須)
+3. **`.p8` ファイルは一度しかダウンロードできません。** 必ず保存してください
+4. 同じ画面に表示される **キーID** と **Issuer ID** も控える
+
+**④ Team ID を確認する**
+[Apple Developer のメンバーシップ画面](https://developer.apple.com/account)に表示される10文字の英数字です。
+
+**⑤ GitHub にシークレットを登録する**
+リポジトリ → Settings → Secrets and variables → Actions → New repository secret
+
+| シークレット名 | 中身 |
+|---|---|
+| `APPSTORE_KEY_ID` | ③のキーID |
+| `APPSTORE_ISSUER_ID` | ③の Issuer ID |
+| `APPSTORE_PRIVATE_KEY` | ③の `.p8` ファイルの中身をそのまま貼り付け(`-----BEGIN PRIVATE KEY-----` の行を含めて全部) |
+| `APPLE_TEAM_ID` | ④の Team ID |
+| `VITE_SUPABASE_URL` | Supabase の Project URL |
+| `VITE_SUPABASE_ANON_KEY` | Supabase の anon キー |
+| `VITE_PASSWORD_RESET_URL` | パスワード再設定メールの戻り先(独自ドメイン取得後) |
+
+### 実行のしかた
+
+GitHub の Actions タブ →「iOS TestFlight」→「Run workflow」。
+`ios-v1.0.0` のようなタグを push しても走ります。
+
+ビルド番号は GitHub の実行番号を自動で使うため、手で上げる必要はありません。
+アップロード後、App Store Connect の TestFlight タブで処理完了(通常5〜15分)を待ってから配信します。
+
+### 費用について
+
+GitHub Actions の macOS ランナーは、プライベートリポジトリだと**通常の10倍**の分数を消費します。
+1回のビルドが10分なら100分相当です。Free プランの月2,000分だと月20回程度が上限になります。
+頻繁に回す場合は Team プラン以上への変更を検討してください。
 
 ---
 

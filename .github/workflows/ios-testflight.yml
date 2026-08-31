@@ -1,0 +1,168 @@
+name: iOS TestFlight
+
+# Mac を持たずに iOS アプリをビルドし TestFlight へ配信するワークフロー。
+#
+# 署名は App Store Connect API キー + `-allowProvisioningUpdates` に任せる。
+# Xcode が証明書とプロビジョニングプロファイルを自動で作成・取得するため、
+# .p12 証明書を手元で作って Secrets に入れる作業は不要。
+# 必要な Secrets は docs/NATIVE_APP.md の「CI の設定」を参照。
+
+on:
+  workflow_dispatch:
+    inputs:
+      testflight_notes:
+        description: テスターへの案内文(TestFlight の「テスト内容」）
+        required: false
+        default: 動作確認用のビルドです
+  push:
+    tags:
+      - "ios-v*"
+
+concurrency:
+  group: ios-testflight
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 60
+
+    env:
+      ARCHIVE_PATH: ${{ github.workspace }}/build/App.xcarchive
+      EXPORT_PATH: ${{ github.workspace }}/build/export
+      # ビルド番号は毎回増える必要がある。GitHub の実行番号をそのまま使う。
+      BUILD_NUMBER: ${{ github.run_number }}
+
+    steps:
+      - name: リポジトリを取得
+        uses: actions/checkout@v4
+
+      - name: Node をセットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 依存関係をインストール
+        run: npm ci
+
+      - name: Web をビルド
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_PASSWORD_RESET_URL: ${{ secrets.VITE_PASSWORD_RESET_URL }}
+        run: npm run build
+
+      - name: ネイティブへ同期
+        run: npx cap sync ios
+
+      - name: App Store Connect API キーを配置
+        env:
+          KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          # altool は決められた場所からキーを読む
+          mkdir -p ~/.appstoreconnect/private_keys
+          printf '%s\n' "$PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${KEY_ID}.p8
+          # xcodebuild へはパスで渡す
+          mkdir -p "$RUNNER_TEMP/keys"
+          printf '%s\n' "$PRIVATE_KEY" > "$RUNNER_TEMP/keys/AuthKey_${KEY_ID}.p8"
+          chmod 600 ~/.appstoreconnect/private_keys/AuthKey_${KEY_ID}.p8 "$RUNNER_TEMP/keys/AuthKey_${KEY_ID}.p8"
+
+      - name: アーカイブを作成
+        env:
+          KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$ARCHIVE_PATH" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey_${KEY_ID}.p8" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID" \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
+            archive
+
+      - name: 書き出し設定を生成
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          # method は Xcode 15.3 以降は app-store-connect。
+          # 古い Xcode で弾かれた場合は app-store に変更する。
+          cat > build/ExportOptions.plist <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>teamID</key>
+            <string>${TEAM_ID}</string>
+            <key>signingStyle</key>
+            <string>automatic</string>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>destination</key>
+            <string>export</string>
+          </dict>
+          </plist>
+          PLIST
+
+      - name: IPA を書き出し
+        env:
+          KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          xcodebuild -exportArchive \
+            -archivePath "$ARCHIVE_PATH" \
+            -exportPath "$EXPORT_PATH" \
+            -exportOptionsPlist build/ExportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey_${KEY_ID}.p8" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID"
+          ls -lh "$EXPORT_PATH"
+
+      - name: IPA を成果物として保存
+        uses: actions/upload-artifact@v4
+        with:
+          name: FitGym-ios-build-${{ github.run_number }}
+          path: ${{ env.EXPORT_PATH }}/*.ipa
+          retention-days: 14
+
+      - name: TestFlight へアップロード
+        env:
+          KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          IPA=$(ls "$EXPORT_PATH"/*.ipa | head -1)
+          echo "アップロード対象: $IPA"
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$IPA" \
+            --apiKey "$KEY_ID" \
+            --apiIssuer "$ISSUER_ID"
+
+      - name: 後片付け
+        if: always()
+        run: |
+          rm -rf ~/.appstoreconnect/private_keys "$RUNNER_TEMP/keys" || true
+
+      - name: 結果を表示
+        if: success()
+        run: |
+          echo "ビルド ${BUILD_NUMBER} をアップロードしました。"
+          echo "App Store Connect の TestFlight タブで処理完了(通常5〜15分)を待ってから、"
+          echo "内部テスターに配信してください。案内文: ${{ github.event.inputs.testflight_notes }}"
