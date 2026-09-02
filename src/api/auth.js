@@ -23,16 +23,26 @@ export const authApi = {
     return apiCall(() => supabase.auth.signInWithPassword({ email, password }));
   },
 
-  // 管理者ログイン。role を確認して会員と分離する。
+  // 管理者ログイン。
+  // 権限の判定は必ず admins テーブルで行う。user_metadata の role は
+  // 登録時にクライアントから自由に指定できるため、判定に使ってはいけない。
+  // admins は RLS により本人(管理者)しか読めないので、
+  // 会員が同じ問い合わせをしても 0 件になり、ここで弾かれる。
   async signInAdmin({ email, password }) {
     const res = await apiCall(() => supabase.auth.signInWithPassword({ email, password }));
     if (res.error) return res;
-    const role = res.data?.user?.user_metadata?.role;
-    if (role !== "admin" && role !== "staff") {
+
+    const { data: admin } = await supabase
+      .from("admins")
+      .select("id, role, store_id, must_change_password")
+      .eq("auth_user_id", res.data.user.id)
+      .maybeSingle();
+
+    if (!admin) {
       await supabase.auth.signOut();
       return { data: null, error: "管理者アカウントではありません" };
     }
-    return res;
+    return { data: { ...res.data, admin }, error: null };
   },
 
   signOut() {
