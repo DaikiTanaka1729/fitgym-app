@@ -43,14 +43,11 @@ export const reservationApi = {
   },
 
   // 自分の予約一覧。既定はこれからの予約のみ。
+  // admins は RLS で会員から読めないため、担当トレーナー名を含めて
+  // RPC 側で必要な項目だけ返す(メールアドレスは返さない)。
+  // 返り値: [{ id, start_at, end_at, status, source, menu_name,
+  //           billing_type, trainer_name, cancelable }]
   listMine({ includePast = false } = {}) {
-    return apiCall(() => {
-      let q = supabase
-        .from("reservations")
-        .select("id, status, source, start_at, end_at, menus(name, billing_type), admins(name)")
-        .eq("status", "booked");
-      if (!includePast) q = q.gt("start_at", new Date().toISOString());
-      return q.order("start_at");
-    });
+    return apiCall(() => supabase.rpc("list_my_reservations", { p_include_past: includePast }));
   },
 };
