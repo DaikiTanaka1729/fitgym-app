@@ -30,6 +30,8 @@ const ERROR_MESSAGES = {
   already_cancelled: "この予約は既にキャンセルされています",
   cancel_too_late: "開始時刻を過ぎているためキャンセルできません",
   not_authenticated: "ログインが必要です",
+  forbidden: "この操作を行う権限がありません",
+  slot_in_use: "予約が入っているため、この枠は外せません",
   // 汎用
   network: "通信エラーが発生しました。接続をご確認ください",
   unknown: "エラーが発生しました。時間をおいて再度お試しください",

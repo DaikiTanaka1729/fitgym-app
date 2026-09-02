@@ -9,6 +9,7 @@ const NAV = [
   { to: "/admin/members", label: "会員管理" },
   { to: "/admin/reservations", label: "予約状況" },
   { to: "/admin/shifts", label: "受付枠" },
+  { to: "/admin/timetable", label: "タイムテーブル" },
   { to: "/admin/menus", label: "メニュー" },
   { to: "/admin/trainers", label: "トレーナー" },
 ];

@@ -75,4 +75,36 @@ export const shiftApi = {
       supabase.from("slots").update({ is_closed: closed }).in("id", slotIds).select("id")
     );
   },
+
+  // タイムテーブル表示用。指定日の枠をトレーナー名・予約件数つきで取得する。
+  // 返り値: [{ id, staff_id, staff_name, start_at, capacity, is_closed, booked }]
+  listDay({ date }) {
+    return apiCall(() => supabase.rpc("list_day_slots", { p_date: date }));
+  },
+
+  // 枠の配置 / 解除。戻り値は 'added' か 'removed'。
+  // 予約が入っている枠は解除できない(slot_in_use)。
+  toggleSlot({ staffId, startAt, capacity = 1 }) {
+    return apiCall(() =>
+      supabase.rpc("toggle_slot", {
+        p_staff_id: staffId,
+        p_start_at: startAt,
+        p_capacity: capacity,
+      })
+    );
+  },
+};
+
+// ============================================================
+// 管理者の共有メモ(日付ごとの申し送り)
+// ------------------------------------------------------------
+// 店舗の管理者・スタッフ全員が読み書きできる。会員には見せない。
+// ============================================================
+export const noteApi = {
+  get({ date }) {
+    return apiCall(() => supabase.rpc("get_admin_note", { p_date: date }));
+  },
+  save({ date, body }) {
+    return apiCall(() => supabase.rpc("save_admin_note", { p_date: date, p_body: body }));
+  },
 };

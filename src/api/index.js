@@ -17,5 +17,5 @@ export { apiCall, toFriendlyError } from "./errors";
 export { authApi } from "./auth";
 export { menuApi } from "./menus";
 export { reservationApi } from "./reservations";
-export { shiftApi } from "./shifts";
+export { shiftApi, noteApi } from "./shifts";
 export { recordApi } from "./records";

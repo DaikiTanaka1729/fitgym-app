@@ -10,6 +10,7 @@ const CARDS = [
   { to: "/admin/members", title: "会員管理", desc: "一覧・検索・CSV出力" },
   { to: "/admin/reservations", title: "予約状況の確認", desc: "日付別の予約と枠の消化状況" },
   { to: "/admin/shifts", title: "受付枠(シフト)", desc: "トレーナー別の受付時間・クローズ" },
+  { to: "/admin/timetable", title: "タイムテーブル", desc: "24時間の枠に誰を配置するか・申し送りメモ" },
   { to: "/admin/menus", title: "メニュー設定", desc: "3課金形態の登録・編集" },
   { to: "/admin/trainers", title: "トレーナー", desc: "担当できるメニューの紐づけ" },
 ];

@@ -10,7 +10,7 @@ import {
   ResetPasswordScreen,
 } from "./screens/auth";
 import { HomeScreen, ReserveScreen, ReserveDoneScreen } from "./screens/member";
-import { DashboardScreen, MenusScreen, ShiftsScreen, TrainersScreen } from "./screens/admin";
+import { DashboardScreen, MenusScreen, ShiftsScreen, TimetableScreen, TrainersScreen } from "./screens/admin";
 
 // 9/20版のルーティング。
 // 会員 = ライトテーマ(グリーン)・スマホ縦長 / 管理者 = ネイビー・タブレット/PC幅。
@@ -47,6 +47,7 @@ export default function App() {
           <Route path="/admin" element={<RequireAdmin><DashboardScreen /></RequireAdmin>} />
           <Route path="/admin/menus" element={<RequireAdmin><MenusScreen /></RequireAdmin>} />
           <Route path="/admin/shifts" element={<RequireAdmin><ShiftsScreen /></RequireAdmin>} />
+          <Route path="/admin/timetable" element={<RequireAdmin><TimetableScreen /></RequireAdmin>} />
           <Route path="/admin/trainers" element={<RequireAdmin><TrainersScreen /></RequireAdmin>} />
         </Route>
       </Routes>
