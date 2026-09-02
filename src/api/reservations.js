@@ -1,49 +1,56 @@
 // ============================================================
-// 予約(共通枠 + 課金形態別チェック)
+// 予約(トレーナー割当方式)
 // ------------------------------------------------------------
-// 予約可否は2段階:
-//   A) 課金形態別チェック(契約期間・残回数・同時予約上限)
-//   B) 枠の空きチェック(全形態共通・capacity 判定)
-// A/B と残数の更新は同時実行で崩れるため、Supabase 側の RPC
-// (create_reservation / cancel_reservation)でトランザクション実行する。
+// 予約枠 = トレーナー1人 × 30分。
+// 会員は「メニューを選ぶ → 30分刻みで時刻を選ぶ」だけで、
+// トレーナーはサーバー側が自動で割り当てる(指名は Phase2)。
+//
+// 所要時間60分のメニューは、同じトレーナーの連続する2枠を占有する。
+//
+// 判定(契約状況・空き)と枠の確保、回数券の減算は
+// サーバーの RPC で1トランザクションにまとめている。
+// クライアントから reservations を直接 INSERT することはできない。
 // ============================================================
 import { supabase } from "./client";
 import { apiCall } from "./errors";
 
 export const reservationApi = {
-  // 指定日(YYYY-MM-DD・日本時間)の予約枠と空き状況。
-  // reservations は RLS で自分の分しか見えないため、埋まり具合は
-  // list_slots RPC(SECURITY DEFINER)で件数だけ受け取る。
-  // 返り値: [{ id, start_at, capacity, booked, is_closed, mine }]
-  listSlots({ date }) {
-    return apiCall(() => supabase.rpc("list_slots", { p_date: date }));
+  // 指定メニュー・指定日(YYYY-MM-DD・日本時間)の予約可能な開始時刻。
+  // 所要時間ぶん連続して空いているトレーナーがいる時刻だけが返る。
+  // 返り値: [{ start_at, available, mine }]
+  //   available … その時刻に対応できるトレーナーの人数
+  //   mine      … 自分が既にその時刻に予約を持っているか
+  listAvailableTimes({ date, menuId }) {
+    return apiCall(() =>
+      supabase.rpc("list_available_times", { p_date: date, p_menu_id: menuId })
+    );
   },
 
-  // 自分の予約一覧(枠とメニューを含む)
-  listMine({ includePast = false } = {}) {
-    return apiCall(() => {
-      let q = supabase
-        .from("reservations")
-        .select("id, status, source, created_at, menus(name, billing_type), slots(start_at)")
-        .eq("status", "booked");
-      if (!includePast) q = q.gte("slots.start_at", new Date().toISOString());
-      return q.order("created_at", { ascending: false });
-    });
-  },
-
-  // source は消費元(time / membership / ticket)
-  create({ memberId, menuId, slotId, source }) {
+  // 予約の作成。トレーナーの割当はサーバー側で行う。
+  // memberId は管理者が代理予約するときだけ指定する(会員は指定しても無視される)。
+  create({ menuId, startAt, memberId = null }) {
     return apiCall(() =>
       supabase.rpc("create_reservation", {
-        p_member_id: memberId,
         p_menu_id: menuId,
-        p_slot_id: slotId,
-        p_source: source,
+        p_start_at: startAt,
+        p_member_id: memberId,
       })
     );
   },
 
   cancel({ reservationId }) {
     return apiCall(() => supabase.rpc("cancel_reservation", { p_reservation_id: reservationId }));
+  },
+
+  // 自分の予約一覧。既定はこれからの予約のみ。
+  listMine({ includePast = false } = {}) {
+    return apiCall(() => {
+      let q = supabase
+        .from("reservations")
+        .select("id, status, source, start_at, end_at, menus(name, billing_type), admins(name)")
+        .eq("status", "booked");
+      if (!includePast) q = q.gt("start_at", new Date().toISOString());
+      return q.order("start_at");
+    });
   },
 };
