@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { T } from "../../theme/tokens";
 import { Button, TextField, Banner } from "../../components";
 import AuthCard from "./AuthCard";
-import { mockAuth } from "./mockAuth"; // TODO(Step3): authApi.signInAdmin へ差し替え
+import { authApi } from "../../api";
 
 // A-01 管理者ログイン(会員側とは認証を分離。配色はネイビー)
 export default function AdminLoginScreen() {
@@ -25,10 +25,15 @@ export default function AdminLoginScreen() {
     setErr(e);
     if (Object.keys(e).length) return;
     setLoading(true);
-    const res = await mockAuth.signInAdmin({ email, password });
+    const { data, error } = await authApi.signInAdmin({ email, password });
     setLoading(false);
-    if (res.error) setBanner(res.error);
-    else setOk(`ログイン成功:${res.user.role}(管理ダッシュボードへ)`);
+    if (error) {
+      setBanner(error);
+      return;
+    }
+    // 管理ダッシュボード(A-02)は Step 5 で追加する。
+    const label = data?.admin?.role === "admin" ? "店舗管理者" : "スタッフ";
+    setOk(`ログイン成功:${label}(管理ダッシュボードへ)`);
   }
 
   return (
@@ -58,9 +63,6 @@ export default function AdminLoginScreen() {
       </div>
       <div style={{ fontSize: 11, color: T.textMute, marginTop: 10, lineHeight: 1.6 }}>
         権限ロール:店舗管理者 / スタッフ(記録入力)。会員側とは認証を分離しています。
-      </div>
-      <div style={{ fontSize: 10, color: T.textFaint, marginTop: 8, textAlign: "center" }}>
-        テスト: admin@fitgym.jp / admin12345
       </div>
     </AuthCard>
   );

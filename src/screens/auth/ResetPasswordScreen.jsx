@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { T, radius } from "../../theme/tokens";
 import { Button, TextField, Banner, MailIcon, CheckCircleIcon } from "../../components";
 import AuthCard from "./AuthCard";
 import { isEmail, validateNewPassword } from "./validation";
-import { mockAuth } from "./mockAuth"; // TODO(Step3): authApi.sendResetLink / updatePassword へ差し替え
+import { authApi, supabase, isSupabaseConfigured } from "../../api";
 
 // M-08 / A-07 パスワード再設定(セルフ・3ステップ)
 //   1) メールアドレス入力 → 2) 送信完了 → 3) 新パスワード設定
@@ -24,6 +24,16 @@ export default function ResetPasswordScreen({ adminMode = false }) {
   const [pwErr, setPwErr] = useState({});
   const [done, setDone] = useState(false);
 
+  // メール内のリンクから戻ってくると Supabase が復旧用セッションを張る。
+  // その合図を受けたら、新パスワード入力(step 3)へ直接進める。
+  useEffect(() => {
+    if (!supabase) return;
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") setStep(3);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
   async function sendLink() {
     setErr(null);
     if (!isEmail(email)) {
@@ -31,8 +41,11 @@ export default function ResetPasswordScreen({ adminMode = false }) {
       return;
     }
     setLoading(true);
-    await mockAuth.sendResetLink({ email });
+    const { error } = await authApi.sendResetLink({ email });
     setLoading(false);
+    // 未登録アドレスでも Supabase は成功を返す。
+    // ここで出るのは送信基盤側の障害なので、そのまま伝えてよい。
+    setErr(error);
     setStep(2);
   }
 
@@ -41,8 +54,12 @@ export default function ResetPasswordScreen({ adminMode = false }) {
     setPwErr(e);
     if (Object.keys(e).length) return;
     setLoading(true);
-    await mockAuth.updatePassword({ email, password: pw });
+    const { error } = await authApi.updatePassword({ password: pw });
     setLoading(false);
+    if (error) {
+      setPwErr({ password: error });
+      return;
+    }
     setDone(true);
   }
 
@@ -89,6 +106,7 @@ export default function ResetPasswordScreen({ adminMode = false }) {
   if (step === 2)
     return (
       <AuthCard accent={accent} title="メールを送信しました" sub="受信箱をご確認ください">
+        {err && <Banner>{err}</Banner>}
         <div style={{ textAlign: "center", padding: "6px 0 10px" }}>
           <MailIcon color={accent} />
         </div>
@@ -110,10 +128,13 @@ export default function ResetPasswordScreen({ adminMode = false }) {
           <br />
           ・届かない場合は迷惑メールもご確認ください
         </div>
-        {/* 仮導線:本番はメール内リンクから /reset-password に戻り step3 を表示する */}
-        <Button variant={variant} full onClick={() => setStep(3)}>
-          (デモ)リンクを開く → 新パスワード設定
-        </Button>
+        {/* Supabase 未接続のときだけ出す確認用の導線。
+            本番ではメール内リンクから戻ると PASSWORD_RECOVERY を受けて自動で step3 に進む。 */}
+        {!isSupabaseConfigured && (
+          <Button variant={variant} full onClick={() => setStep(3)}>
+            (デモ)リンクを開く → 新パスワード設定
+          </Button>
+        )}
         {backLink}
       </AuthCard>
     );

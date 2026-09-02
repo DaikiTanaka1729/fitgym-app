@@ -4,7 +4,7 @@ import { T, font, radius } from "../../theme/tokens";
 import { Button, TextField, Banner } from "../../components";
 import AuthCard from "./AuthCard";
 import { validateLogin } from "./validation";
-import { mockAuth } from "./mockAuth"; // TODO(Step3): authApi.signInMember へ差し替え
+import { authApi } from "../../api";
 
 // M-02 会員ログイン
 export default function LoginScreen() {
@@ -24,10 +24,15 @@ export default function LoginScreen() {
     setErr(e);
     if (Object.keys(e).length) return;
     setLoading(true);
-    const res = await mockAuth.signInMember({ email, password });
+    const { data, error } = await authApi.signInMember({ email, password });
     setLoading(false);
-    if (res.error) setBanner(res.error);
-    else setOk(`ログイン成功:${res.user.name} さん(ホームへ遷移)`);
+    if (error) {
+      setBanner(error);
+      return;
+    }
+    // ホーム(M-03)は Step 4 で追加する。それまでは成功表示のみ。
+    const name = data?.user?.user_metadata?.name || data?.user?.email;
+    setOk(`ログイン成功:${name} さん(ホームへ遷移)`);
   }
 
   return (
@@ -71,9 +76,6 @@ export default function LoginScreen() {
       >
         はじめての方は会員登録
       </button>
-      <div style={{ fontSize: 10, color: T.textFaint, marginTop: 10, textAlign: "center" }}>
-        テスト: tanaka@example.com / password123
-      </div>
     </AuthCard>
   );
 }

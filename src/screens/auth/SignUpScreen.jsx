@@ -4,7 +4,7 @@ import { T } from "../../theme/tokens";
 import { Button, TextField, Banner, CheckCircleIcon } from "../../components";
 import AuthCard from "./AuthCard";
 import { validateSignup } from "./validation";
-import { mockAuth } from "./mockAuth"; // TODO(Step3): authApi.signUpMember へ差し替え
+import { authApi } from "../../api";
 
 // M-01 会員登録
 export default function SignUpScreen() {
@@ -14,6 +14,9 @@ export default function SignUpScreen() {
   const [loading, setLoading] = useState(false);
   const [banner, setBanner] = useState(null);
   const [done, setDone] = useState(false);
+  // メール確認が有効な場合、登録直後はセッションが張られない。
+  // その場合は「ログインへ」ではなく確認メールの案内を出す。
+  const [needsConfirm, setNeedsConfirm] = useState(false);
   const set = (k) => (v) => setF({ ...f, [k]: v });
 
   async function submit() {
@@ -22,10 +25,19 @@ export default function SignUpScreen() {
     setErr(e);
     if (Object.keys(e).length) return;
     setLoading(true);
-    const res = await mockAuth.signUpMember(f);
+    const { data, error } = await authApi.signUpMember({
+      name: f.name,
+      email: f.email,
+      password: f.password,
+      birthDate: f.birth,
+    });
     setLoading(false);
-    if (res.error) setBanner(res.error);
-    else setDone(true);
+    if (error) {
+      setBanner(error);
+      return;
+    }
+    setNeedsConfirm(!data?.session);
+    setDone(true);
   }
 
   if (done)
@@ -35,9 +47,19 @@ export default function SignUpScreen() {
           <CheckCircleIcon />
           <div style={{ fontSize: 15, fontWeight: 500, marginTop: 10 }}>ようこそ、{f.name} さん</div>
           <div style={{ fontSize: 12, color: T.textMute, marginTop: 6, lineHeight: 1.6 }}>
-            会員登録が完了しました。
-            <br />
-            ログインしてご利用を開始できます。
+            {needsConfirm ? (
+              <>
+                {f.email} 宛に確認メールを送りました。
+                <br />
+                メール内のリンクを開くとご利用を開始できます。
+              </>
+            ) : (
+              <>
+                会員登録が完了しました。
+                <br />
+                ログインしてご利用を開始できます。
+              </>
+            )}
           </div>
           <div style={{ marginTop: 16 }}>
             <Button full onClick={() => navigate("/login")}>
