@@ -30,9 +30,7 @@ export default function LoginScreen() {
       setBanner(error);
       return;
     }
-    // ホーム(M-03)は Step 4 で追加する。それまでは成功表示のみ。
-    const name = data?.user?.user_metadata?.name || data?.user?.email;
-    setOk(`ログイン成功:${name} さん(ホームへ遷移)`);
+    navigate("/home", { replace: true });
   }
 
   return (

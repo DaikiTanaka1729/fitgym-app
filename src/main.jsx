@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
+import { SessionProvider } from "./session";
 import "./index.css";
 
 // サービスワーカーは本番ビルドでのみ登録する。
@@ -17,7 +18,9 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <SessionProvider>
+        <App />
+      </SessionProvider>
     </BrowserRouter>
   </React.StrictMode>
 );
