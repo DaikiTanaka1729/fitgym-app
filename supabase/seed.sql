@@ -18,10 +18,13 @@ VALUES
   ('00000000-0000-0000-0000-000000000001', '10回券',         'ticket',    60, 70000, NULL,   10,    6)
 ON CONFLICT DO NOTHING;
 
--- 予約枠(当日 10:00〜18:00 を30分刻み・定員3)
+-- 予約枠(24時間営業。00:00〜23:30 を30分刻み=48枠/日、定員3)
+-- 日付・時刻の境界は日本時間で切る(サーバーの既定は UTC のため)。
+-- 今日から2週間分を用意する。
 INSERT INTO slots (store_id, start_at, capacity)
 SELECT
   '00000000-0000-0000-0000-000000000001',
-  date_trunc('day', now()) + INTERVAL '10 hour' + (n * INTERVAL '30 minute'),
+  ((CURRENT_DATE + d)::TIMESTAMP + (n * INTERVAL '30 minute')) AT TIME ZONE 'Asia/Tokyo',
   3
-FROM generate_series(0, 15) AS n;
+FROM generate_series(0, 13) AS d,
+     generate_series(0, 47) AS n;
