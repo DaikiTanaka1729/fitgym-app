@@ -31,9 +31,7 @@ export default function AdminLoginScreen() {
       setBanner(error);
       return;
     }
-    // 管理ダッシュボード(A-02)は Step 5 で追加する。
-    const label = data?.admin?.role === "admin" ? "店舗管理者" : "スタッフ";
-    setOk(`ログイン成功:${label}(管理ダッシュボードへ)`);
+    navigate("/admin", { replace: true });
   }
 
   return (

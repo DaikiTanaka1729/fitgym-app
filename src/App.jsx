@@ -1,8 +1,8 @@
 import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { T, font } from "./theme/tokens";
 import { isSupabaseConfigured } from "./api";
-import { RequireMember } from "./session";
+import { RequireAdmin, RequireMember } from "./session";
 import {
   SignUpScreen,
   LoginScreen,
@@ -10,10 +10,10 @@ import {
   ResetPasswordScreen,
 } from "./screens/auth";
 import { HomeScreen, ReserveScreen, ReserveDoneScreen } from "./screens/member";
+import { DashboardScreen, MenusScreen, ShiftsScreen, TrainersScreen } from "./screens/admin";
 
 // 9/20版のルーティング。
-// 会員 = ライトテーマ(グリーン)/ 管理者 = ネイビー。
-// 管理者機能の画面は Step 5 で追加する。
+// 会員 = ライトテーマ(グリーン)・スマホ縦長 / 管理者 = ネイビー・タブレット/PC幅。
 export default function App() {
   return (
     <div
@@ -27,31 +27,44 @@ export default function App() {
       }}
     >
       {!isSupabaseConfigured && <SetupNotice />}
-      <div style={{ maxWidth: 400, margin: "0 auto" }}>
-        <Routes>
+      <Routes>
+        {/* 会員・認証:スマホ幅 */}
+        <Route element={<Narrow />}>
           <Route path="/" element={<Navigate to="/home" replace />} />
-
-          {/* 認証 */}
           <Route path="/signup" element={<SignUpScreen />} />
           <Route path="/login" element={<LoginScreen />} />
           <Route path="/reset-password" element={<ResetPasswordScreen />} />
-
-          {/* 会員(ログイン必須) */}
           <Route path="/home" element={<RequireMember><HomeScreen /></RequireMember>} />
           <Route path="/reserve" element={<RequireMember><ReserveScreen /></RequireMember>} />
           <Route path="/reserve/done" element={<RequireMember><ReserveDoneScreen /></RequireMember>} />
-
-          {/* 管理者 */}
-          <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
           <Route path="/admin/login" element={<AdminLoginScreen />} />
           <Route path="/admin/reset-password" element={<ResetPasswordScreen adminMode />} />
-
           <Route path="*" element={<Navigate to="/home" replace />} />
-        </Routes>
-      </div>
+        </Route>
+
+        {/* 管理者:タブレット/PC幅 */}
+        <Route element={<Wide />}>
+          <Route path="/admin" element={<RequireAdmin><DashboardScreen /></RequireAdmin>} />
+          <Route path="/admin/menus" element={<RequireAdmin><MenusScreen /></RequireAdmin>} />
+          <Route path="/admin/shifts" element={<RequireAdmin><ShiftsScreen /></RequireAdmin>} />
+          <Route path="/admin/trainers" element={<RequireAdmin><TrainersScreen /></RequireAdmin>} />
+        </Route>
+      </Routes>
     </div>
   );
 }
+
+const Narrow = () => (
+  <div style={{ maxWidth: 400, margin: "0 auto" }}>
+    <Outlet />
+  </div>
+);
+
+const Wide = () => (
+  <div style={{ maxWidth: 1040, margin: "0 auto" }}>
+    <Outlet />
+  </div>
+);
 
 // 環境変数未設定(Supabase 未接続)のあいだだけ出す開発用の注意書き。
 function SetupNotice() {
