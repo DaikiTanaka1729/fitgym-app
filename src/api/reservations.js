@@ -11,18 +11,24 @@ import { supabase } from "./client";
 import { apiCall } from "./errors";
 
 export const reservationApi = {
-  // 指定日(YYYY-MM-DD)の予約枠と空き状況
-  listSlots({ storeId, date }) {
-    return apiCall(() =>
-      supabase
-        .from("slots")
-        .select("*, reservations(count)")
-        .eq("store_id", storeId)
-        .gte("start_at", date + "T00:00:00")
-        .lte("start_at", date + "T23:59:59")
-        .eq("is_closed", false)
-        .order("start_at")
-    );
+  // 指定日(YYYY-MM-DD・日本時間)の予約枠と空き状況。
+  // reservations は RLS で自分の分しか見えないため、埋まり具合は
+  // list_slots RPC(SECURITY DEFINER)で件数だけ受け取る。
+  // 返り値: [{ id, start_at, capacity, booked, is_closed, mine }]
+  listSlots({ date }) {
+    return apiCall(() => supabase.rpc("list_slots", { p_date: date }));
+  },
+
+  // 自分の予約一覧(枠とメニューを含む)
+  listMine({ includePast = false } = {}) {
+    return apiCall(() => {
+      let q = supabase
+        .from("reservations")
+        .select("id, status, source, created_at, menus(name, billing_type), slots(start_at)")
+        .eq("status", "booked");
+      if (!includePast) q = q.gte("slots.start_at", new Date().toISOString());
+      return q.order("created_at", { ascending: false });
+    });
   },
 
   // source は消費元(time / membership / ticket)
