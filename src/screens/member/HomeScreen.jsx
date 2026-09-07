@@ -5,6 +5,7 @@ import { Button, Banner, Badge, Spinner } from "../../components";
 import { reservationApi, authApi } from "../../api";
 import { useDisplayName } from "../../session";
 import MemberLayout from "./MemberLayout";
+import { APP_NAME } from "../../appConfig";
 import { jstDate, jstTime } from "./format";
 
 const TONE = { time: "primary", unlimited: "accent", ticket: "amber" };
@@ -50,7 +51,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <MemberLayout title="FitGym" sub={name ? `${name} さん` : ""}>
+    <MemberLayout title={APP_NAME} sub={name ? `${name} さん` : ""}>
       {banner && <Banner>{banner}</Banner>}
 
       <Button full onClick={() => navigate("/reserve")}>

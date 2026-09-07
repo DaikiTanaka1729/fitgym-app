@@ -4,6 +4,7 @@ import { Badge, Banner, Button, Segmented, Spinner } from "../../components";
 import { downloadCsv, surveyApi, toCsv, trialApi } from "../../api";
 import { QUESTIONS, SCALE_LABELS, SCALE_QUESTIONS } from "../../survey";
 import AdminLayout from "./AdminLayout";
+import { APP_SLUG } from "../../appConfig";
 
 const TRIAL_STATUS = {
   new: { label: "未対応", tone: "amber" },
@@ -74,7 +75,7 @@ export default function SurveysScreen() {
   function exportSurveyCsv() {
     if (!rows?.length) return;
     downloadCsv(
-      `fitgym_survey_${new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" })}.csv`,
+      `${APP_SLUG}_survey_${new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" })}.csv`,
       toCsv(rows, [
         { label: "回答日時", value: (r) => jdt(r.created_at) },
         { label: "会員名", value: (r) => r.member_name || "" },
@@ -86,7 +87,7 @@ export default function SurveysScreen() {
   function exportTrialCsv() {
     if (!trials?.length) return;
     downloadCsv(
-      `fitgym_trial_${new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" })}.csv`,
+      `${APP_SLUG}_trial_${new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" })}.csv`,
       toCsv(trials, [
         { label: "申込日時", value: (r) => jdt(r.created_at) },
         { label: "お名前", value: (r) => r.name },

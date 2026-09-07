@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { T, font, radius, shadow } from "../../theme/tokens";
 import { authApi } from "../../api";
 import { useSession } from "../../session";
+import { ADMIN_CONSOLE_NAME } from "../../appConfig";
 
 const NAV = [
   { to: "/admin", label: "ダッシュボード", exact: true },
@@ -43,7 +44,7 @@ export default function AdminLayout({ title, sub, actions, children }) {
         }}
       >
         <div>
-          <div style={{ color: T.onDark, fontWeight: 500, fontSize: 15 }}>FitGym 管理コンソール</div>
+          <div style={{ color: T.onDark, fontWeight: 500, fontSize: 15 }}>{ADMIN_CONSOLE_NAME}</div>
           <div style={{ color: "rgba(255,255,255,.75)", fontSize: 11 }}>
             {admin?.name}
             {admin?.role === "admin" ? "(店舗管理者)" : "(スタッフ)"}

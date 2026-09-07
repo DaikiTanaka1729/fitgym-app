@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { T, font, radius } from "../../theme/tokens";
 import { Button, TextField, Banner } from "../../components";
 import AuthCard from "./AuthCard";
+import { APP_NAME } from "../../appConfig";
 import { validateLogin } from "./validation";
 import { authApi } from "../../api";
 
@@ -34,7 +35,7 @@ export default function LoginScreen() {
   }
 
   return (
-    <AuthCard title="FitGym" sub="ログイン">
+    <AuthCard title={APP_NAME} sub="ログイン">
       {banner && <Banner>{banner}</Banner>}
       {ok && <Banner tone="success">{ok}</Banner>}
       <TextField label="メールアドレス" value={email} onChange={setEmail} placeholder="name@example.com" error={err.email} />

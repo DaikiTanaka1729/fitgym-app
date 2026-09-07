@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { T } from "../../theme/tokens";
 import { Button, TextField, Banner } from "../../components";
 import AuthCard from "./AuthCard";
+import { ADMIN_CONSOLE_NAME } from "../../appConfig";
 import { authApi } from "../../api";
 
 // A-01 管理者ログイン(会員側とは認証を分離。配色はネイビー)
@@ -35,10 +36,10 @@ export default function AdminLoginScreen() {
   }
 
   return (
-    <AuthCard accent={T.navy} title="FitGym 管理コンソール" sub="管理者ログイン">
+    <AuthCard accent={T.navy} title={ADMIN_CONSOLE_NAME} sub="管理者ログイン">
       {banner && <Banner>{banner}</Banner>}
       {ok && <Banner tone="success">{ok}</Banner>}
-      <TextField label="管理者ID / メールアドレス" value={email} onChange={setEmail} placeholder="admin@fitgym.jp" error={err.email} />
+      <TextField label="管理者ID / メールアドレス" value={email} onChange={setEmail} placeholder="admin@example.com" error={err.email} />
       <TextField
         label="パスワード"
         type={show ? "text" : "password"}

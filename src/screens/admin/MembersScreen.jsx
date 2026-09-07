@@ -4,6 +4,7 @@ import { T, font, radius } from "../../theme/tokens";
 import { Badge, Banner, Button, DataTable, Spinner, TextField } from "../../components";
 import { downloadCsv, memberApi, toCsv } from "../../api";
 import AdminLayout from "./AdminLayout";
+import { APP_SLUG } from "../../appConfig";
 
 const CSV_COLUMNS = [
   { label: "会員ID", value: (r) => r.id },
@@ -49,7 +50,7 @@ export default function MembersScreen() {
   function exportCsv() {
     if (!rows?.length) return;
     const stamp = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
-    downloadCsv(`fitgym_members_${stamp}.csv`, toCsv(rows, CSV_COLUMNS));
+    downloadCsv(`${APP_SLUG}_members_${stamp}.csv`, toCsv(rows, CSV_COLUMNS));
   }
 
   return (

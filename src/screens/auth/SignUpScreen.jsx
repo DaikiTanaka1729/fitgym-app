@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { T } from "../../theme/tokens";
 import { Button, TextField, Banner, CheckCircleIcon } from "../../components";
 import AuthCard from "./AuthCard";
+import { APP_NAME } from "../../appConfig";
 import { validateSignup } from "./validation";
 import { authApi } from "../../api";
 
@@ -42,7 +43,7 @@ export default function SignUpScreen() {
 
   if (done)
     return (
-      <AuthCard title="FitGym" sub="登録完了">
+      <AuthCard title={APP_NAME} sub="登録完了">
         <div style={{ textAlign: "center", padding: "16px 0" }}>
           <CheckCircleIcon />
           <div style={{ fontSize: 15, fontWeight: 500, marginTop: 10 }}>ようこそ、{f.name} さん</div>
@@ -71,7 +72,7 @@ export default function SignUpScreen() {
     );
 
   return (
-    <AuthCard title="FitGym" sub="新規会員登録">
+    <AuthCard title={APP_NAME} sub="新規会員登録">
       {banner && <Banner>{banner}</Banner>}
       <TextField label="氏名" required value={f.name} onChange={set("name")} placeholder="山田 太郎" error={err.name} />
       <TextField label="メールアドレス" required value={f.email} onChange={set("email")} placeholder="name@example.com" error={err.email} />

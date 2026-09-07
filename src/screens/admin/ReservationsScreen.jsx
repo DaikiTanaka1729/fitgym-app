@@ -5,6 +5,7 @@ import { Badge, Banner, Button, Spinner, Toast } from "../../components";
 import { downloadCsv, reservationApi, shiftApi, toCsv } from "../../api";
 import { useSession } from "../../session";
 import AdminLayout from "./AdminLayout";
+import { APP_SLUG } from "../../appConfig";
 import { nextDates } from "../member/format";
 
 const SOURCE = { time: "時間課金", unlimited: "通い放題", ticket: "回数券" };
@@ -64,7 +65,7 @@ export default function ReservationsScreen() {
     const booked = (rows || []).filter((r) => r.status !== "cancelled");
     if (!booked.length) return;
     downloadCsv(
-      `fitgym_reservations_${date}.csv`,
+      `${APP_SLUG}_reservations_${date}.csv`,
       toCsv(booked, [
         { label: "開始", value: (r) => jtime(r.start_at) },
         { label: "終了", value: (r) => jtime(r.end_at) },
