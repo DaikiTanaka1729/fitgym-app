@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { T, radius } from "../../theme/tokens";
-import { Banner, Spinner, Toast } from "../../components";
+import { Banner, Button, Spinner, TextField, Toast } from "../../components";
 import { menuApi, shiftApi } from "../../api";
 import { useSession } from "../../session";
 import AdminLayout from "./AdminLayout";
@@ -16,21 +16,65 @@ export default function TrainersScreen() {
   const [banner, setBanner] = useState(null);
   const [toast, setToast] = useState(null);
   const [busy, setBusy] = useState(null);
+  const [form, setForm] = useState(null);   // { id?, name, email, role }
+  const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
+  const load = useCallback(async () => {
+    if (!admin) return;
+    const [s, m, l] = await Promise.all([
+      shiftApi.listStaff(),
+      menuApi.list({ storeId: admin.store_id }),
+      shiftApi.listStaffMenus(),
+    ]);
+    if (s.error || m.error || l.error) setBanner(s.error || m.error || l.error);
+    setStaff(s.data || []);
+    setMenus(m.data || []);
+    setLinks(new Set((l.data || []).map((x) => `${x.admin_id}:${x.menu_id}`)));
+  }, [admin]);
 
   useEffect(() => {
-    if (!admin) return;
-    (async () => {
-      const [s, m, l] = await Promise.all([
-        shiftApi.listStaff(),
-        menuApi.list({ storeId: admin.store_id }),
-        shiftApi.listStaffMenus(),
-      ]);
-      if (s.error || m.error || l.error) setBanner(s.error || m.error || l.error);
-      setStaff(s.data || []);
-      setMenus(m.data || []);
-      setLinks(new Set((l.data || []).map((x) => `${x.admin_id}:${x.menu_id}`)));
-    })();
-  }, [admin]);
+    load();
+  }, [load]);
+
+  function flash(msg) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2200);
+  }
+
+  async function saveStaff() {
+    setBanner(null);
+    if (!form.name.trim()) {
+      setBanner("氏名を入力してください");
+      return;
+    }
+    setSaving(true);
+    const { error } = form.id
+      ? await shiftApi.updateStaff({ adminId: form.id, name: form.name.trim(), role: form.role })
+      : await shiftApi.createStaff({ name: form.name.trim(), email: form.email.trim(), role: form.role });
+    setSaving(false);
+    if (error) {
+      setBanner(error);
+      return;
+    }
+    setForm(null);
+    flash(form.id ? "トレーナー情報を更新しました" : "トレーナーを追加しました");
+    load();
+  }
+
+  async function removeStaff(id) {
+    setBanner(null);
+    setBusy(`del:${id}`);
+    const { error } = await shiftApi.deleteStaff({ adminId: id });
+    setBusy(null);
+    setConfirmDelete(null);
+    if (error) {
+      setBanner(error);
+      return;
+    }
+    flash("トレーナーを削除しました");
+    load();
+  }
 
   async function toggleApproval(s) {
     setBanner(null);
@@ -73,11 +117,81 @@ export default function TrainersScreen() {
     <AdminLayout
       title="トレーナー × メニュー"
       sub="担当できるメニューにチェックを入れてください。この設定が各時間帯の受入可能数になります。"
+      actions={
+        isStoreAdmin &&
+        !form && (
+          <Button variant="navy" onClick={() => setForm({ name: "", email: "", role: "staff" })}>
+            トレーナーを追加
+          </Button>
+        )
+      }
     >
       {banner && <Banner>{banner}</Banner>}
       {toast && (
         <div style={{ marginBottom: 12 }}>
           <Toast>{toast}</Toast>
+        </div>
+      )}
+
+      {form && (
+        <div style={{ border: `1px solid ${T.navy}`, borderRadius: radius.lg, padding: 16, marginBottom: 18, maxWidth: 380 }}>
+          <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 12 }}>
+            {form.id ? "トレーナー情報の編集" : "トレーナーを追加"}
+          </div>
+
+          <TextField
+            label="氏名"
+            required
+            value={form.name}
+            onChange={(v) => setForm({ ...form, name: v })}
+            placeholder="田中 太郎"
+          />
+
+          {!form.id && (
+            <TextField
+              label="メールアドレス"
+              required
+              value={form.email}
+              onChange={(v) => setForm({ ...form, email: v })}
+              placeholder="trainer@example.com"
+            />
+          )}
+
+          <div style={{ fontSize: 11, color: T.textMute, fontWeight: 500, marginBottom: 5 }}>権限</div>
+          <select
+            value={form.role}
+            onChange={(e) => setForm({ ...form, role: e.target.value })}
+            style={{
+              width: "100%",
+              background: T.field,
+              border: `1px solid ${T.fieldBorder}`,
+              borderRadius: radius.md,
+              padding: "9px 10px",
+              fontSize: 12,
+              color: T.text,
+              boxSizing: "border-box",
+              outline: "none",
+              marginBottom: 12,
+            }}
+          >
+            <option value="staff">スタッフ(記録入力・予約枠)</option>
+            <option value="admin">店舗管理者(すべての操作)</option>
+          </select>
+
+          <div style={{ fontSize: 11, color: T.textMute, lineHeight: 1.7, marginBottom: 14 }}>
+            ここで追加したトレーナーは、受付枠を持つだけならログイン不要です。
+            管理画面にログインさせる場合は、別途アカウントの紐づけが必要です。
+            {form.id && <><br />メールアドレスは認証情報に紐づくため変更できません。</>}
+          </div>
+
+          <div style={{ display: "flex", gap: 8 }}>
+            <Button variant="navy" onClick={saveStaff} loading={saving}>
+              保存する
+            </Button>
+            <Button variant="ghost" onClick={() => setForm(null)}>
+              キャンセル
+            </Button>
+          </div>
         </div>
       )}
 
@@ -121,6 +235,47 @@ export default function TrainersScreen() {
                     <div style={{ fontSize: 10.5, color: T.textFaint }}>
                       {s.role === "admin" ? "店舗管理者" : "スタッフ"}
                     </div>
+                    {isStoreAdmin && (
+                      <div style={{ display: "flex", gap: 10, marginTop: 4, fontSize: 11 }}>
+                        <span
+                          onClick={() => setForm({ id: s.id, name: s.name, email: s.email, role: s.role })}
+                          role="button"
+                          tabIndex={0}
+                          style={{ color: T.accent, cursor: "pointer" }}
+                        >
+                          編集
+                        </span>
+                        {confirmDelete === s.id ? (
+                          <>
+                            <span
+                              onClick={() => removeStaff(s.id)}
+                              role="button"
+                              tabIndex={0}
+                              style={{ color: T.danger, cursor: "pointer", fontWeight: 500 }}
+                            >
+                              {busy === `del:${s.id}` ? "削除中…" : "本当に削除"}
+                            </span>
+                            <span
+                              onClick={() => setConfirmDelete(null)}
+                              role="button"
+                              tabIndex={0}
+                              style={{ color: T.textMute, cursor: "pointer" }}
+                            >
+                              やめる
+                            </span>
+                          </>
+                        ) : (
+                          <span
+                            onClick={() => setConfirmDelete(s.id)}
+                            role="button"
+                            tabIndex={0}
+                            style={{ color: T.danger, cursor: "pointer" }}
+                          >
+                            削除
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </td>
                   {menus.map((m) => {
                     const key = `${s.id}:${m.id}`;
@@ -182,7 +337,7 @@ export default function TrainersScreen() {
         <br />
         「メニュー承認」にチェックが入っている人だけが、仮登録されたメニューを会員に公開できます。変更できるのは店舗管理者のみです。
         <br />
-        トレーナーの追加は現在データベースから行っています。画面からの追加は今後対応します。
+        削除すると、予約が入っていない受付枠も一緒に消えます。予約が残っている場合は削除できません。
       </div>
     </AdminLayout>
   );

@@ -54,6 +54,59 @@ export const memberApi = {
   listAudit({ memberId }) {
     return apiCall(() => supabase.rpc("list_member_audit", { p_member_id: memberId }));
   },
+
+  // 会員が持つ権利(回数券・通い放題)の一覧
+  listEntitlements({ memberId }) {
+    return apiCall(() => supabase.rpc("list_member_entitlements", { p_member_id: memberId }));
+  },
+
+  // 回数券を付与する。RLS により自店舗の会員にのみ登録できる。
+  grantTicket({ storeId, memberId, menuId, remaining, expireOn }) {
+    return apiCall(() =>
+      supabase
+        .from("tickets")
+        .insert({
+          store_id: storeId,
+          member_id: memberId,
+          menu_id: menuId,
+          remaining,
+          expire_on: expireOn || null,
+        })
+        .select()
+        .single()
+    );
+  },
+
+  // 通い放題の契約を登録する
+  grantMembership({ storeId, memberId, menuId, startOn, endOn }) {
+    return apiCall(() =>
+      supabase
+        .from("memberships")
+        .insert({
+          store_id: storeId,
+          member_id: memberId,
+          menu_id: menuId,
+          start_on: startOn,
+          end_on: endOn,
+        })
+        .select()
+        .single()
+    );
+  },
+
+  // 回数券の残数を直接書き換える(調整・失効に使う)
+  updateTicket({ ticketId, patch }) {
+    return apiCall(() =>
+      supabase.from("tickets").update(patch).eq("id", ticketId).select().single()
+    );
+  },
+
+  // 通い放題の契約期間を変更する(途中終了に使う)
+  updateMembership({ membershipId, patch }) {
+    return apiCall(() =>
+      supabase.from("memberships").update(patch).eq("id", membershipId).select().single()
+    );
+  },
 };
 
 // 推測されにくい仮パスワードを作る。

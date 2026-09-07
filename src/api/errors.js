@@ -35,6 +35,13 @@ const ERROR_MESSAGES = {
   invalid_action: "操作の種類が正しくありません",
   invalid_range: "期間または時間帯の指定が正しくありません",
   approval_required: "メニューを公開するには承認権限が必要です",
+  name_required: "氏名を入力してください",
+  invalid_email: "メールアドレスの形式が正しくありません",
+  invalid_role: "権限の指定が正しくありません",
+  cannot_demote_self: "自分自身を店舗管理者から外すことはできません",
+  cannot_delete_self: "自分自身は削除できません",
+  staff_in_use: "予約が入っている受付枠が残っているため削除できません",
+  too_many_requests: "しばらく時間をおいて再度お試しください",
   // 汎用
   network: "通信エラーが発生しました。接続をご確認ください",
   unknown: "エラーが発生しました。時間をおいて再度お試しください",

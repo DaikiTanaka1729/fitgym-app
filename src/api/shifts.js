@@ -26,6 +26,26 @@ export const shiftApi = {
     );
   },
 
+  // トレーナーの追加・編集・削除。いずれも店舗管理者のみ。
+  // メールアドレスは認証アカウントとの紐づけに使うため、追加時のみ指定する。
+  createStaff({ name, email, role = "staff" }) {
+    return apiCall(() =>
+      supabase.rpc("create_staff", { p_name: name, p_email: email, p_role: role })
+    );
+  },
+
+  updateStaff({ adminId, name, role }) {
+    return apiCall(() =>
+      supabase.rpc("update_staff", { p_admin_id: adminId, p_name: name, p_role: role })
+    );
+  },
+
+  // 予約の入っていない受付枠は一緒に削除される。
+  // 予約が残っている場合は削除できない(staff_in_use)。
+  deleteStaff({ adminId }) {
+    return apiCall(() => supabase.rpc("delete_staff", { p_admin_id: adminId }));
+  },
+
   // 担当できるメニューの紐づけ
   listStaffMenus() {
     return apiCall(() =>

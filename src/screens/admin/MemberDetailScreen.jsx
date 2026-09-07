@@ -4,6 +4,7 @@ import { T, radius } from "../../theme/tokens";
 import { Badge, Banner, Button, Spinner, TextField, Toast } from "../../components";
 import { memberApi, reservationApi } from "../../api";
 import AdminLayout from "./AdminLayout";
+import EntitlementSection from "./EntitlementSection";
 import RecordSection from "./RecordSection";
 import PasswordSection from "./PasswordSection";
 
@@ -270,6 +271,9 @@ export default function MemberDetailScreen() {
           </div>
         )}
       </Section>
+
+      {/* ---- 回数券・通い放題(A-1) ---- */}
+      <EntitlementSection memberId={memberId} onFlash={flash} />
 
       {/* ---- 記録の代理入力(A-04) ---- */}
       <RecordSection memberId={memberId} onFlash={flash} />
