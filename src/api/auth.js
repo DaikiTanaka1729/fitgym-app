@@ -67,4 +67,14 @@ export const authApi = {
   updatePassword({ password }) {
     return apiCall(() => supabase.auth.updateUser({ password }));
   },
+
+  // 会員のプロフィール。初回パスワード変更の要否判定に使う。
+  getMyProfile() {
+    return apiCall(() => supabase.rpc("get_my_profile"));
+  },
+
+  // 初回パスワード変更を終えたことを記録する
+  clearMustChangePassword() {
+    return apiCall(() => supabase.rpc("clear_must_change_password"));
+  },
 };

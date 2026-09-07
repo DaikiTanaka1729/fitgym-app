@@ -30,7 +30,40 @@ export const memberApi = {
   listReservations({ memberId }) {
     return apiCall(() => supabase.rpc("list_member_reservations", { p_member_id: memberId }));
   },
+
+  // 会員へパスワード再設定メールを送る(会員自身が新しいパスワードを決める。推奨)
+  sendResetMail({ email }) {
+    const redirectTo =
+      import.meta.env?.VITE_PASSWORD_RESET_URL ||
+      window.location.origin + "/reset-password";
+    return apiCall(() => supabase.auth.resetPasswordForEmail(email, { redirectTo }));
+  },
+
+  // 仮パスワードを発行する。店舗管理者のみ実行できる。
+  // 発行と同時に「初回ログイン時の変更」が必須になる。
+  // 仮パスワードは画面側で生成し、口頭・書面で会員へ伝える運用。
+  issueTempPassword({ memberId, tempPassword }) {
+    return apiCall(() =>
+      supabase.rpc("issue_temp_password", {
+        p_member_id: memberId,
+        p_temp_password: tempPassword,
+      })
+    );
+  },
+
+  listAudit({ memberId }) {
+    return apiCall(() => supabase.rpc("list_member_audit", { p_member_id: memberId }));
+  },
 };
+
+// 推測されにくい仮パスワードを作る。
+// 紛らわしい文字(0/O/1/l/I)は口頭で伝える都合上あえて外す。
+export function generateTempPassword(length = 10) {
+  const chars = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const buf = new Uint32Array(length);
+  crypto.getRandomValues(buf);
+  return Array.from(buf, (n) => chars[n % chars.length]).join("");
+}
 
 // CSV へ変換する。Excel が文字化けしないよう BOM を付ける。
 export function toCsv(rows, columns) {

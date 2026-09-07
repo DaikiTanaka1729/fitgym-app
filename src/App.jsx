@@ -9,7 +9,7 @@ import {
   AdminLoginScreen,
   ResetPasswordScreen,
 } from "./screens/auth";
-import { HomeScreen, ReserveScreen, ReserveDoneScreen } from "./screens/member";
+import { ChangePasswordScreen, HomeScreen, ReserveScreen, ReserveDoneScreen } from "./screens/member";
 import {
   DashboardScreen,
   MemberDetailScreen,
@@ -43,6 +43,7 @@ export default function App() {
           <Route path="/signup" element={<SignUpScreen />} />
           <Route path="/login" element={<LoginScreen />} />
           <Route path="/reset-password" element={<ResetPasswordScreen />} />
+          <Route path="/change-password" element={<RequireMember><ChangePasswordScreen /></RequireMember>} />
           <Route path="/home" element={<RequireMember><HomeScreen /></RequireMember>} />
           <Route path="/reserve" element={<RequireMember><ReserveScreen /></RequireMember>} />
           <Route path="/reserve/done" element={<RequireMember><ReserveDoneScreen /></RequireMember>} />

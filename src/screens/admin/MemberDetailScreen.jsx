@@ -4,6 +4,8 @@ import { T, radius } from "../../theme/tokens";
 import { Badge, Banner, Button, Spinner, TextField, Toast } from "../../components";
 import { memberApi, reservationApi } from "../../api";
 import AdminLayout from "./AdminLayout";
+import RecordSection from "./RecordSection";
+import PasswordSection from "./PasswordSection";
 
 const SOURCE = { time: "時間課金", unlimited: "通い放題", ticket: "回数券" };
 const TONE = { time: "primary", unlimited: "accent", ticket: "amber" };
@@ -269,9 +271,11 @@ export default function MemberDetailScreen() {
         )}
       </Section>
 
-      <div style={{ marginTop: 18, fontSize: 11.5, color: T.textMute, lineHeight: 1.7 }}>
-        記録の代理入力とパスワード操作は、この画面に追加していきます。
-      </div>
+      {/* ---- 記録の代理入力(A-04) ---- */}
+      <RecordSection memberId={memberId} onFlash={flash} />
+
+      {/* ---- パスワード操作(A-08) ---- */}
+      <PasswordSection member={member} onFlash={flash} />
     </AdminLayout>
   );
 }

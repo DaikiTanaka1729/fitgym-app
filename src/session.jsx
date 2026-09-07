@@ -7,14 +7,15 @@
 // ============================================================
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { supabase, isSupabaseConfigured } from "./api";
+import { authApi, supabase, isSupabaseConfigured } from "./api";
 import { T, font } from "./theme/tokens";
 
-const SessionContext = createContext({ session: null, admin: null, loading: true });
+const SessionContext = createContext({ session: null, admin: null, member: null, loading: true });
 
 export function SessionProvider({ children }) {
   const [session, setSession] = useState(null);
   const [admin, setAdmin] = useState(null);
+  const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,18 +31,23 @@ export function SessionProvider({ children }) {
       setSession(s);
       if (!s) {
         setAdmin(null);
+        setMember(null);
         setLoading(false);
         return;
       }
       // 管理者かどうかを admins テーブルで判定する。
       // 会員が同じ問い合わせをしても RLS により 0 件になる。
-      const { data } = await supabase
-        .from("admins")
-        .select("id, name, role, store_id, must_change_password")
-        .eq("auth_user_id", s.user.id)
-        .maybeSingle();
+      const [a, m] = await Promise.all([
+        supabase
+          .from("admins")
+          .select("id, name, role, store_id, must_change_password")
+          .eq("auth_user_id", s.user.id)
+          .maybeSingle(),
+        authApi.getMyProfile(),
+      ]);
       if (!alive) return;
-      setAdmin(data || null);
+      setAdmin(a.data || null);
+      setMember(m.data?.[0] || null);
       setLoading(false);
     }
 
@@ -57,8 +63,16 @@ export function SessionProvider({ children }) {
     };
   }, []);
 
+  // パスワード変更後などにプロフィールを取り直す
+  const refreshProfile = async () => {
+    const { data } = await authApi.getMyProfile();
+    setMember(data?.[0] || null);
+  };
+
   return (
-    <SessionContext.Provider value={{ session, admin, loading }}>{children}</SessionContext.Provider>
+    <SessionContext.Provider value={{ session, admin, member, loading, refreshProfile }}>
+      {children}
+    </SessionContext.Provider>
   );
 }
 
@@ -79,10 +93,14 @@ function Loading() {
 }
 
 export function RequireMember({ children }) {
-  const { session, loading } = useSession();
+  const { session, member, loading } = useSession();
   const location = useLocation();
   if (loading) return <Loading />;
   if (!session) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  // 仮パスワードで入った会員は、変更を終えるまで先へ進めない
+  if (member?.must_change_password && location.pathname !== "/change-password") {
+    return <Navigate to="/change-password" replace />;
+  }
   return children;
 }
 
