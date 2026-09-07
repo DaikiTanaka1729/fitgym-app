@@ -20,3 +20,4 @@ export { memberApi, toCsv, downloadCsv, generateTempPassword } from "./members";
 export { reservationApi } from "./reservations";
 export { shiftApi, noteApi } from "./shifts";
 export { recordApi } from "./records";
+export { surveyApi, trialApi } from "./feedback";

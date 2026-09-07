@@ -6,3 +6,4 @@ export { default as TimetableScreen } from "./TimetableScreen";
 export { default as MembersScreen } from "./MembersScreen";
 export { default as MemberDetailScreen } from "./MemberDetailScreen";
 export { default as ReservationsScreen } from "./ReservationsScreen";
+export { default as SurveysScreen } from "./SurveysScreen";

@@ -58,6 +58,15 @@ export default function ReserveDoneScreen() {
         <Button variant="secondary" full onClick={() => navigate("/reserve")}>
           続けて予約する
         </Button>
+        <div
+          onClick={() => navigate("/survey")}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === "Enter" && navigate("/survey")}
+          style={{ textAlign: "center", fontSize: 11.5, color: T.accent, cursor: "pointer", marginTop: 2 }}
+        >
+          ご意見をお聞かせください
+        </div>
       </div>
     </MemberLayout>
   );

@@ -12,6 +12,7 @@ const NAV = [
   { to: "/admin/timetable", label: "タイムテーブル" },
   { to: "/admin/menus", label: "メニュー" },
   { to: "/admin/trainers", label: "トレーナー" },
+  { to: "/admin/surveys", label: "アンケート" },
 ];
 
 // 管理者向け画面の共通の外枠。

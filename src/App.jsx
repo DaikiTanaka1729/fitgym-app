@@ -9,7 +9,14 @@ import {
   AdminLoginScreen,
   ResetPasswordScreen,
 } from "./screens/auth";
-import { ChangePasswordScreen, HomeScreen, ReserveScreen, ReserveDoneScreen } from "./screens/member";
+import {
+  ChangePasswordScreen,
+  HomeScreen,
+  ReserveScreen,
+  ReserveDoneScreen,
+  SurveyScreen,
+} from "./screens/member";
+import TrialBookingScreen from "./screens/public/TrialBookingScreen";
 import {
   DashboardScreen,
   MemberDetailScreen,
@@ -17,6 +24,7 @@ import {
   MenusScreen,
   ReservationsScreen,
   ShiftsScreen,
+  SurveysScreen,
   TimetableScreen,
   TrainersScreen,
 } from "./screens/admin";
@@ -43,10 +51,12 @@ export default function App() {
           <Route path="/signup" element={<SignUpScreen />} />
           <Route path="/login" element={<LoginScreen />} />
           <Route path="/reset-password" element={<ResetPasswordScreen />} />
+          <Route path="/trial" element={<TrialBookingScreen />} />
           <Route path="/change-password" element={<RequireMember><ChangePasswordScreen /></RequireMember>} />
           <Route path="/home" element={<RequireMember><HomeScreen /></RequireMember>} />
           <Route path="/reserve" element={<RequireMember><ReserveScreen /></RequireMember>} />
           <Route path="/reserve/done" element={<RequireMember><ReserveDoneScreen /></RequireMember>} />
+          <Route path="/survey" element={<RequireMember><SurveyScreen /></RequireMember>} />
           <Route path="/admin/login" element={<AdminLoginScreen />} />
           <Route path="/admin/reset-password" element={<ResetPasswordScreen adminMode />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
@@ -62,6 +72,7 @@ export default function App() {
           <Route path="/admin/shifts" element={<RequireAdmin><ShiftsScreen /></RequireAdmin>} />
           <Route path="/admin/timetable" element={<RequireAdmin><TimetableScreen /></RequireAdmin>} />
           <Route path="/admin/trainers" element={<RequireAdmin><TrainersScreen /></RequireAdmin>} />
+          <Route path="/admin/surveys" element={<RequireAdmin><SurveysScreen /></RequireAdmin>} />
         </Route>
       </Routes>
     </div>

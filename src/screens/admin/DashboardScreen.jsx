@@ -13,6 +13,7 @@ const CARDS = [
   { to: "/admin/timetable", title: "タイムテーブル", desc: "24時間の枠に誰を配置するか・申し送りメモ" },
   { to: "/admin/menus", title: "メニュー設定", desc: "3課金形態の登録・編集" },
   { to: "/admin/trainers", title: "トレーナー", desc: "担当できるメニューの紐づけ" },
+  { to: "/admin/surveys", title: "アンケート・体験予約", desc: "回答の集計と体験申し込みの管理" },
 ];
 
 // A-02 管理ダッシュボード
