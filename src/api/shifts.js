@@ -39,17 +39,23 @@ export const shiftApi = {
     );
   },
 
-  // 受付枠の一括作成。作成した枠数が返る。
-  // 終了時刻の枠は作らない(18:00 指定なら最後の枠は 17:30)。
-  create({ adminId, from, to, start = "00:00", end = "24:00", capacity = 1 }) {
+  // 受付枠の一括操作。
+  //   action: "create"(作成)| "delete"(削除)| "close"(クローズ)| "open"(再開)
+  //   adminId を null にすると店舗の全トレーナーが対象。
+  //   weekdays に [1,3,5] のように渡すと、その曜日だけを対象にする(0=日)。
+  // 終了時刻の枠は含まない(18:00 指定なら最後の枠は 17:30)。
+  // 返り値: [{ affected, skipped }] skipped は予約が入っていて削除を見送った数。
+  bulk({ adminId = null, from, to, start = "00:00", end = "24:00", action, capacity = 1, weekdays = null }) {
     return apiCall(() =>
-      supabase.rpc("create_shift", {
+      supabase.rpc("bulk_shifts", {
         p_admin_id: adminId,
         p_from: from,
         p_to: to,
         p_start: start,
         p_end: end,
+        p_action: action,
         p_capacity: capacity,
+        p_weekdays: weekdays,
       })
     );
   },
