@@ -9,6 +9,7 @@ import AdminLayout from "./AdminLayout";
 // ここで設定した内容が、各時間帯に何件の予約を受けられるかを決める。
 export default function TrainersScreen() {
   const { admin } = useSession();
+  const isStoreAdmin = admin?.role === "admin";
   const [staff, setStaff] = useState(null);
   const [menus, setMenus] = useState([]);
   const [links, setLinks] = useState(new Set());
@@ -30,6 +31,23 @@ export default function TrainersScreen() {
       setLinks(new Set((l.data || []).map((x) => `${x.admin_id}:${x.menu_id}`)));
     })();
   }, [admin]);
+
+  async function toggleApproval(s) {
+    setBanner(null);
+    const key = `approve:${s.id}`;
+    setBusy(key);
+    const { error } = await shiftApi.setApprovalRight({ adminId: s.id, can: !s.can_approve_menus });
+    setBusy(null);
+    if (error) {
+      setBanner(error);
+      return;
+    }
+    setStaff((prev) =>
+      prev.map((x) => (x.id === s.id ? { ...x, can_approve_menus: !x.can_approve_menus } : x))
+    );
+    setToast(s.can_approve_menus ? "承認権限を外しました" : "承認権限を付与しました");
+    setTimeout(() => setToast(null), 2000);
+  }
 
   async function toggle(adminId, menuId) {
     const key = `${adminId}:${menuId}`;
@@ -87,6 +105,12 @@ export default function TrainersScreen() {
                     </div>
                   </th>
                 ))}
+                <th style={th()}>
+                  メニュー承認
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,.7)", fontWeight: 400 }}>
+                    公開できる人
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -124,6 +148,28 @@ export default function TrainersScreen() {
                       </td>
                     );
                   })}
+                  <td style={td()}>
+                    <button
+                      onClick={() => isStoreAdmin && toggleApproval(s)}
+                      disabled={!isStoreAdmin || busy === `approve:${s.id}`}
+                      aria-pressed={s.can_approve_menus}
+                      title={isStoreAdmin ? "" : "店舗管理者のみ変更できます"}
+                      style={{
+                        width: 30,
+                        height: 30,
+                        borderRadius: 7,
+                        cursor: isStoreAdmin ? "pointer" : "default",
+                        border: `1.5px solid ${s.can_approve_menus ? T.navy : T.fieldBorder}`,
+                        background: s.can_approve_menus ? T.navy : T.bg,
+                        color: T.onDark,
+                        fontSize: 15,
+                        lineHeight: 1,
+                        opacity: isStoreAdmin ? 1 : 0.5,
+                      }}
+                    >
+                      {s.can_approve_menus ? "✓" : ""}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -133,6 +179,8 @@ export default function TrainersScreen() {
 
       <div style={{ marginTop: 16, fontSize: 11.5, color: T.textMute, lineHeight: 1.7 }}>
         担当を外しても、すでに入っている予約は取り消されません。
+        <br />
+        「メニュー承認」にチェックが入っている人だけが、仮登録されたメニューを会員に公開できます。変更できるのは店舗管理者のみです。
         <br />
         トレーナーの追加は現在データベースから行っています。画面からの追加は今後対応します。
       </div>

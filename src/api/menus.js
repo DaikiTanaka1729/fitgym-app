@@ -22,4 +22,11 @@ export const menuApi = {
   update(id, patch) {
     return apiCall(() => supabase.from("menus").update(patch).eq("id", id).select().single());
   },
+
+  // 公開 / 公開停止。承認権限を持つ管理者のみ実行できる。
+  setPublished({ menuId, published }) {
+    return apiCall(() =>
+      supabase.rpc("set_menu_published", { p_menu_id: menuId, p_published: published })
+    );
+  },
 };

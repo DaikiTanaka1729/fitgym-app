@@ -34,6 +34,7 @@ const ERROR_MESSAGES = {
   slot_in_use: "予約が入っているため、この枠は外せません",
   invalid_action: "操作の種類が正しくありません",
   invalid_range: "期間または時間帯の指定が正しくありません",
+  approval_required: "メニューを公開するには承認権限が必要です",
   // 汎用
   network: "通信エラーが発生しました。接続をご確認ください",
   unknown: "エラーが発生しました。時間をおいて再度お試しください",

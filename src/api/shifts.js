@@ -12,7 +12,17 @@ export const shiftApi = {
   // トレーナー(admins)の一覧。管理者のみ参照できる。
   listStaff() {
     return apiCall(() =>
-      supabase.from("admins").select("id, name, email, role").order("created_at")
+      supabase
+        .from("admins")
+        .select("id, name, email, role, can_approve_menus")
+        .order("created_at")
+    );
+  },
+
+  // メニューの承認権限を付与 / 解除する。店舗管理者のみ。
+  setApprovalRight({ adminId, can }) {
+    return apiCall(() =>
+      supabase.rpc("set_approval_right", { p_admin_id: adminId, p_can: can })
     );
   },
 

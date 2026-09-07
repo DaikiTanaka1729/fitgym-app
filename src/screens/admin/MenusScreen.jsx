@@ -6,6 +6,7 @@ import { useSession } from "../../session";
 import AdminLayout from "./AdminLayout";
 
 const TONE = { time: "primary", unlimited: "accent", ticket: "amber" };
+const STATUS = { draft: { label: "仮登録", tone: "gray" }, published: { label: "公開中", tone: "primary" } };
 const LABEL = { time: "時間課金", unlimited: "通い放題", ticket: "回数券" };
 
 const EMPTY = {
@@ -23,7 +24,9 @@ const EMPTY = {
 // A-09 メニュー設定
 export default function MenusScreen() {
   const { admin } = useSession();
+  const canApprove = admin?.can_approve_menus === true;
   const [rows, setRows] = useState(null);
+  const [publishing, setPublishing] = useState(null);
   const [form, setForm] = useState(null);
   const [banner, setBanner] = useState(null);
   const [toast, setToast] = useState(null);
@@ -77,6 +80,20 @@ export default function MenusScreen() {
     }
     flash(form.id ? "メニューを更新しました" : "メニューを登録しました");
     setForm(null);
+    load();
+  }
+
+  async function togglePublish(row) {
+    setBanner(null);
+    setPublishing(row.id);
+    const published = row.status !== "published";
+    const { error } = await menuApi.setPublished({ menuId: row.id, published });
+    setPublishing(null);
+    if (error) {
+      setBanner(error);
+      return;
+    }
+    flash(published ? "メニューを公開しました" : "公開を停止しました");
     load();
   }
 
@@ -223,35 +240,60 @@ export default function MenusScreen() {
                   : "—",
             },
             {
-              key: "is_active",
-              label: "状態",
-              w: "0.6fr",
-              render: (v) => <Badge tone={v ? "primary" : "gray"}>{v ? "有効" : "停止中"}</Badge>,
+              key: "status",
+              label: "公開状態",
+              w: "0.7fr",
+              render: (v, r) => (
+                <span style={{ display: "inline-flex", gap: 4, flexWrap: "wrap" }}>
+                  <Badge tone={STATUS[v]?.tone || "gray"}>{STATUS[v]?.label || v}</Badge>
+                  {!r.is_active && <Badge tone="gray">停止中</Badge>}
+                </span>
+              ),
             },
             {
               key: "id",
               label: "操作",
-              w: "0.5fr",
+              w: "1fr",
               render: (_v, r) => (
-                <span
-                  onClick={() =>
-                    setForm({
-                      id: r.id,
-                      name: r.name,
-                      billing_type: r.billing_type,
-                      duration_min: r.duration_min ?? "",
-                      price: String(r.price ?? 0),
-                      max_active: r.max_active ?? "",
-                      ticket_count: r.ticket_count ?? "",
-                      valid_months: r.valid_months ?? "",
-                      is_active: r.is_active,
-                    })
-                  }
-                  role="button"
-                  tabIndex={0}
-                  style={{ color: T.accent, cursor: "pointer" }}
-                >
-                  編集
+                <span style={{ display: "inline-flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                  <span
+                    onClick={() =>
+                      setForm({
+                        id: r.id,
+                        name: r.name,
+                        billing_type: r.billing_type,
+                        duration_min: r.duration_min ?? "",
+                        price: String(r.price ?? 0),
+                        max_active: r.max_active ?? "",
+                        ticket_count: r.ticket_count ?? "",
+                        valid_months: r.valid_months ?? "",
+                        is_active: r.is_active,
+                      })
+                    }
+                    role="button"
+                    tabIndex={0}
+                    style={{ color: T.accent, cursor: "pointer" }}
+                  >
+                    編集
+                  </span>
+                  {canApprove ? (
+                    <span
+                      onClick={() => publishing !== r.id && togglePublish(r)}
+                      role="button"
+                      tabIndex={0}
+                      style={{
+                        color: r.status === "published" ? T.dangerDark : T.primaryDark,
+                        cursor: publishing === r.id ? "default" : "pointer",
+                        opacity: publishing === r.id ? 0.5 : 1,
+                      }}
+                    >
+                      {r.status === "published" ? "公開を停止" : "公開する"}
+                    </span>
+                  ) : (
+                    r.status !== "published" && (
+                      <span style={{ color: T.textFaint }}>承認待ち</span>
+                    )
+                  )}
                 </span>
               ),
             },

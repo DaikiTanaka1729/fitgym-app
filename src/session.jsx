@@ -40,7 +40,7 @@ export function SessionProvider({ children }) {
       const [a, m] = await Promise.all([
         supabase
           .from("admins")
-          .select("id, name, role, store_id, must_change_password")
+          .select("id, name, role, store_id, must_change_password, can_approve_menus")
           .eq("auth_user_id", s.user.id)
           .maybeSingle(),
         authApi.getMyProfile(),
