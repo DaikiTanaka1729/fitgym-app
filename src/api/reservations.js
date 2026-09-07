@@ -42,6 +42,11 @@ export const reservationApi = {
     return apiCall(() => supabase.rpc("cancel_reservation", { p_reservation_id: reservationId }));
   },
 
+  // 管理者向け:指定日(YYYY-MM-DD・日本時間)の予約一覧
+  listDay({ date }) {
+    return apiCall(() => supabase.rpc("list_day_reservations", { p_date: date }));
+  },
+
   // 自分の予約一覧。既定はこれからの予約のみ。
   // admins は RLS で会員から読めないため、担当トレーナー名を含めて
   // RPC 側で必要な項目だけ返す(メールアドレスは返さない)。

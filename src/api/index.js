@@ -16,6 +16,7 @@ export { supabase, isSupabaseConfigured } from "./client";
 export { apiCall, toFriendlyError } from "./errors";
 export { authApi } from "./auth";
 export { menuApi } from "./menus";
+export { memberApi, toCsv, downloadCsv } from "./members";
 export { reservationApi } from "./reservations";
 export { shiftApi, noteApi } from "./shifts";
 export { recordApi } from "./records";
