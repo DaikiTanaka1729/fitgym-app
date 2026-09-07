@@ -5,6 +5,7 @@ import { Banner } from "../../components";
 import { supabase } from "../../api";
 import { useSession } from "../../session";
 import AdminLayout from "./AdminLayout";
+import TodaySchedule from "./TodaySchedule";
 
 const CARDS = [
   { to: "/admin/members", title: "会員管理", desc: "一覧・検索・CSV出力" },
@@ -70,6 +71,9 @@ export default function DashboardScreen() {
         <Stat label="本日の受付枠" value={stat?.slots} unit="枠" />
         <Stat label="メニュー" value={stat?.menus} unit="件" />
       </div>
+
+      {/* 本日のスケジュールと申し送りメモ */}
+      <TodaySchedule />
 
       <div style={{ fontSize: 12, fontWeight: 500, color: T.textMute, marginBottom: 10 }}>各機能</div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
