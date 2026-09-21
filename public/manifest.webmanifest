@@ -1,7 +1,7 @@
 {
-  "name": "FitGym",
-  "short_name": "FitGym",
-  "description": "FitGym の予約アプリ",
+  "name": "eFsystem",
+  "short_name": "eFsystem",
+  "description": "eFsystem の予約アプリ",
   "lang": "ja",
   "start_url": "/",
   "scope": "/",

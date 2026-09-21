@@ -1,6 +1,6 @@
 {
-  "appId": "jp.fitgym.app",
-  "appName": "FitGym",
+  "appId": "jp.efsystem.app",
+  "appName": "eFsystem",
   "webDir": "dist",
   "backgroundColor": "#ffffff",
   "ios": {

@@ -12,10 +12,10 @@
 // ============================================================
 
 // 画面に表示する名前(日本語可)
-export const APP_NAME = "FitGym";
+export const APP_NAME = "eFsystem";
 
 // 管理者側のヘッダー
 export const ADMIN_CONSOLE_NAME = `${APP_NAME} 管理コンソール`;
 
 // CSVなどファイル名に使う英小文字のスラッグ。日本語・空白は使わない。
-export const APP_SLUG = "fitgym";
+export const APP_SLUG = "efsystem";
