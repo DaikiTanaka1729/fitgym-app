@@ -104,6 +104,11 @@ export default function HomeScreen() {
             <div style={{ fontSize: 12, color: T.textMute, marginTop: 5 }}>
               {jstDate(r.start_at)} {jstTime(r.start_at)} 〜 {jstTime(r.end_at)}
             </div>
+            {r.needs_purchase && (
+              <div style={{ fontSize: 11, color: T.amberDark, marginTop: 4 }}>
+                ご来店時に店舗でのお支払いが必要です
+              </div>
+            )}
             {r.cancelable && (
               <div style={{ marginTop: 10 }}>
                 <Button variant="ghost" onClick={() => cancel(r.id)} loading={cancelling === r.id}>

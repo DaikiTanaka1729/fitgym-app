@@ -28,18 +28,31 @@ export const reservationApi = {
 
   // 予約の作成。トレーナーの割当はサーバー側で行う。
   // memberId は管理者が代理予約するときだけ指定する(会員は指定しても無視される)。
-  create({ menuId, startAt, memberId = null }) {
+  //
+  // allowUnpurchased … 未購入メニューの画面から予約したときだけ true にする。
+  //   未購入のまま予約が入ると「店舗でのお支払いが必要」な予約として記録される。
+  //   誤操作で未購入の予約が入らないよう、既定は false のままにしておく。
+  create({ menuId, startAt, memberId = null, allowUnpurchased = false }) {
     return apiCall(() =>
       supabase.rpc("create_reservation", {
         p_menu_id: menuId,
         p_start_at: startAt,
         p_member_id: memberId,
+        p_allow_unpurchased: allowUnpurchased,
       })
     );
   },
 
   cancel({ reservationId }) {
     return apiCall(() => supabase.rpc("cancel_reservation", { p_reservation_id: reservationId }));
+  },
+
+  // 店舗での購入を反映する(管理者)。
+  // 回数券なら1回消費し、時間課金なら購入登録を作り、「要購入」の印を外す。
+  settlePurchase({ reservationId }) {
+    return apiCall(() =>
+      supabase.rpc("settle_reservation_purchase", { p_reservation_id: reservationId })
+    );
   },
 
   // 管理者向け:指定日(YYYY-MM-DD・日本時間)の予約一覧
@@ -51,7 +64,7 @@ export const reservationApi = {
   // admins は RLS で会員から読めないため、担当トレーナー名を含めて
   // RPC 側で必要な項目だけ返す(メールアドレスは返さない)。
   // 返り値: [{ id, start_at, end_at, status, source, menu_name,
-  //           billing_type, trainer_name, cancelable }]
+  //           billing_type, trainer_name, cancelable, needs_purchase }]
   listMine({ includePast = false } = {}) {
     return apiCall(() => supabase.rpc("list_my_reservations", { p_include_past: includePast }));
   },

@@ -24,6 +24,7 @@ const ERROR_MESSAGES = {
   reservation_limit: "予約の保有上限に達しています",
   duplicate_reservation: "同じ時間帯に既に予約があります",
   menu_not_found: "選択したメニューは現在ご利用いただけません",
+  not_purchased: "このメニューは店舗でのお申し込みが必要です",
   source_mismatch: "メニューと支払い方法が一致しません",
   member_not_found: "対象の会員が見つかりません",
   reservation_not_found: "予約が見つかりません",

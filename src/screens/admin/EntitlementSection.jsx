@@ -260,7 +260,7 @@ export default function EntitlementSection({ memberId, onFlash }) {
         >
           回数券・通い放題の登録はありません。
           <br />
-          この会員は時間課金のメニューのみ予約できます。
+          この会員が予約できるのは、上で登録した時間課金のメニューだけです。
         </div>
       )}
 

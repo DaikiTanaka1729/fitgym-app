@@ -277,7 +277,8 @@ export default function TodaySchedule() {
                 {r.trainer_name && (
                   <span style={{ fontSize: 11.5, color: T.textFaint }}>担当 {r.trainer_name}</span>
                 )}
-                <span style={{ marginLeft: "auto" }}>
+                <span style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+                  {r.needs_purchase && r.status !== "cancelled" && <Badge tone="danger">要購入</Badge>}
                   <Badge tone={TONE[r.source]}>{SOURCE[r.source]}</Badge>
                 </span>
               </div>

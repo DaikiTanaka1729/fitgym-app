@@ -60,6 +60,24 @@ export const memberApi = {
     return apiCall(() => supabase.rpc("list_member_entitlements", { p_member_id: memberId }));
   },
 
+  // 時間課金メニューの購入状況(利用できるメニュー)の一覧
+  // 返り値: [{ menu_id, name, billing_type, duration_min, price, purchased, status }]
+  listMenuAccess({ memberId }) {
+    return apiCall(() => supabase.rpc("list_member_menu_access", { p_member_id: memberId }));
+  },
+
+  // 時間課金メニューの購入を登録 / 取り消しする。
+  // 登録がない会員はそのメニューを予約できない(データベース側でも止まる)。
+  setMenuAccess({ memberId, menuId, on }) {
+    return apiCall(() =>
+      supabase.rpc("set_member_menu", {
+        p_member_id: memberId,
+        p_menu_id: menuId,
+        p_on: on,
+      })
+    );
+  },
+
   // 回数券を付与する。RLS により自店舗の会員にのみ登録できる。
   grantTicket({ storeId, memberId, menuId, remaining, expireOn }) {
     return apiCall(() =>

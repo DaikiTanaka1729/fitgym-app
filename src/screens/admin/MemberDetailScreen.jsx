@@ -5,6 +5,7 @@ import { Badge, Banner, Button, Spinner, TextField, Toast } from "../../componen
 import { memberApi, reservationApi } from "../../api";
 import AdminLayout from "./AdminLayout";
 import EntitlementSection from "./EntitlementSection";
+import MenuAccessSection from "./MenuAccessSection";
 import RecordSection from "./RecordSection";
 import PasswordSection from "./PasswordSection";
 
@@ -36,6 +37,7 @@ export default function MemberDetailScreen() {
   const [toast, setToast] = useState(null);
   const [saving, setSaving] = useState(false);
   const [cancelling, setCancelling] = useState(null);
+  const [settling, setSettling] = useState(null);
 
   const load = useCallback(async () => {
     const [m, r] = await Promise.all([
@@ -91,6 +93,21 @@ export default function MemberDetailScreen() {
       return;
     }
     flash("予約をキャンセルしました");
+    load();
+  }
+
+  // 未購入のまま入った予約を、店舗での購入として処理する。
+  // 回数券のときは、先に下の「回数券・通い放題」で付与しておく必要がある。
+  async function settle(id) {
+    setBanner(null);
+    setSettling(id);
+    const { error } = await reservationApi.settlePurchase({ reservationId: id });
+    setSettling(null);
+    if (error) {
+      setBanner(error);
+      return;
+    }
+    flash("店舗での購入として処理しました");
     load();
   }
 
@@ -215,6 +232,12 @@ export default function MemberDetailScreen() {
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <Badge tone={TONE[r.source]}>{SOURCE[r.source]}</Badge>
+                  {r.needs_purchase && <Badge tone="danger">要購入</Badge>}
+                  {r.needs_purchase && (
+                    <Button variant="navy" onClick={() => settle(r.id)} loading={settling === r.id}>
+                      購入を反映
+                    </Button>
+                  )}
                   <Button variant="ghost" onClick={() => cancelReservation(r.id)} loading={cancelling === r.id}>
                     キャンセル
                   </Button>
@@ -260,6 +283,11 @@ export default function MemberDetailScreen() {
                     <td style={cellStyle}>{r.trainer_name || "—"}</td>
                     <td style={cellStyle}>
                       <Badge tone={TONE[r.source]}>{SOURCE[r.source]}</Badge>
+                      {r.needs_purchase && r.status !== "cancelled" && (
+                        <div style={{ marginTop: 4 }}>
+                          <Badge tone="danger">要購入</Badge>
+                        </div>
+                      )}
                     </td>
                     <td style={cellStyle}>
                       <Badge tone={r.status === "cancelled" ? "gray" : "primary"}>{STATUS[r.status]}</Badge>
@@ -271,6 +299,9 @@ export default function MemberDetailScreen() {
           </div>
         )}
       </Section>
+
+      {/* ---- 時間課金メニューの購入登録 ---- */}
+      <MenuAccessSection memberId={memberId} onFlash={flash} />
 
       {/* ---- 回数券・通い放題(A-1) ---- */}
       <EntitlementSection memberId={memberId} onFlash={flash} />

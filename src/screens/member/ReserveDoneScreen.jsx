@@ -27,7 +27,7 @@ export default function ReserveDoneScreen() {
   // 直接URLを開かれた場合はホームへ戻す
   if (!state?.menu || !state?.startAt) return <Navigate to="/home" replace />;
 
-  const { menu, startAt } = state;
+  const { menu, startAt, needsPurchase } = state;
   const end = new Date(new Date(startAt).getTime() + menu.duration_min * 60000).toISOString();
 
   return (
@@ -48,8 +48,26 @@ export default function ReserveDoneScreen() {
         <Row label="日時" value={`${jstDate(startAt)} ${jstTime(startAt)} 〜 ${jstTime(end)}`} />
         <Row label="所要時間" value={`${menu.duration_min}分`} />
         {menu.billing_type === "time" && <Row label="料金" value={`¥${menu.price.toLocaleString()}`} />}
-        {menu.billing_type === "ticket" && note && <Row label="回数券" value={note} />}
+        {menu.billing_type === "ticket" && !needsPurchase && note && <Row label="回数券" value={note} />}
       </div>
+
+      {needsPurchase && (
+        <div
+          style={{
+            border: `1px solid ${T.amberDark}33`,
+            background: T.amberSoft,
+            borderRadius: radius.lg,
+            padding: "12px 14px",
+            fontSize: 11.5,
+            lineHeight: 1.8,
+            marginTop: 12,
+          }}
+        >
+          このメニューは未購入のためお支払いが済んでいません。
+          <br />
+          ご来店時に受付でお手続きをお願いします。
+        </div>
+      )}
 
       <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
         <Button full onClick={() => navigate("/home")}>

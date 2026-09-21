@@ -27,6 +27,7 @@ export default function ReservationsScreen() {
   const [banner, setBanner] = useState(null);
   const [toast, setToast] = useState(null);
   const [cancelling, setCancelling] = useState(null);
+  const [settling, setSettling] = useState(null);
 
   const load = useCallback(async () => {
     setRows(null);
@@ -58,6 +59,21 @@ export default function ReservationsScreen() {
       return;
     }
     flash("予約をキャンセルしました");
+    load();
+  }
+
+  // 未購入のまま入った予約を、店舗での購入として処理する。
+  // 回数券なら1回消費し、時間課金なら購入登録を作る。
+  async function settle(id) {
+    setBanner(null);
+    setSettling(id);
+    const { error } = await reservationApi.settlePurchase({ reservationId: id });
+    setSettling(null);
+    if (error) {
+      setBanner(error);
+      return;
+    }
+    flash("店舗での購入として処理しました");
     load();
   }
 
@@ -171,15 +187,27 @@ export default function ReservationsScreen() {
                     <td style={tdStyle}>{r.trainer_name || "—"}</td>
                     <td style={tdStyle}>
                       <Badge tone={TONE[r.source]}>{SOURCE[r.source]}</Badge>
+                      {r.needs_purchase && !cancelled && (
+                        <div style={{ marginTop: 4 }}>
+                          <Badge tone="danger">要購入</Badge>
+                        </div>
+                      )}
                     </td>
                     <td style={tdStyle}>
                       <Badge tone={cancelled ? "gray" : "primary"}>{STATUS[r.status]}</Badge>
                     </td>
-                    <td style={tdStyle}>
+                    <td style={{ ...tdStyle, whiteSpace: "nowrap" }}>
                       {!cancelled && (
-                        <Button variant="ghost" onClick={() => cancel(r.id)} loading={cancelling === r.id}>
-                          キャンセル
-                        </Button>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          {r.needs_purchase && (
+                            <Button variant="navy" onClick={() => settle(r.id)} loading={settling === r.id}>
+                              購入を反映
+                            </Button>
+                          )}
+                          <Button variant="ghost" onClick={() => cancel(r.id)} loading={cancelling === r.id}>
+                            キャンセル
+                          </Button>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -194,6 +222,9 @@ export default function ReservationsScreen() {
         稼働率は「消化した枠 ÷ クローズしていない受付枠」です。60分のメニューは2枠を消化します。
         <br />
         会員名を押すと会員詳細へ移動します。
+        <br />
+        「要購入」は未購入のメニューで入った予約です。店頭で代金を受け取ったら「購入を反映」を押してください。
+        回数券の場合は、先に会員詳細で回数券を付与してから押すと1回分が消費されます。
       </div>
     </AdminLayout>
   );
