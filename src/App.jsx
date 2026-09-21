@@ -7,6 +7,7 @@ import {
   SignUpScreen,
   LoginScreen,
   AdminLoginScreen,
+  AdminSignUpScreen,
   ResetPasswordScreen,
 } from "./screens/auth";
 import {
@@ -58,6 +59,7 @@ export default function App() {
           <Route path="/reserve/done" element={<RequireMember><ReserveDoneScreen /></RequireMember>} />
           <Route path="/survey" element={<RequireMember><SurveyScreen /></RequireMember>} />
           <Route path="/admin/login" element={<AdminLoginScreen />} />
+          <Route path="/admin/signup" element={<AdminSignUpScreen />} />
           <Route path="/admin/reset-password" element={<ResetPasswordScreen adminMode />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Route>

@@ -56,9 +56,20 @@ export default function AdminLoginScreen() {
       </div>
       <div
         onClick={() => navigate("/admin/reset-password")}
+        role="button"
+        tabIndex={0}
         style={{ textAlign: "center", fontSize: 11, color: T.accent, marginTop: 12, cursor: "pointer" }}
       >
         パスワードをお忘れの方
+      </div>
+
+      <div style={{ borderTop: `1px solid ${T.borderFaint}`, margin: "14px 0" }} />
+
+      <Button variant="ghost" full onClick={() => navigate("/admin/signup")}>
+        管理者として新規登録
+      </Button>
+      <div style={{ fontSize: 10.5, color: T.textFaint, marginTop: 8, textAlign: "center", lineHeight: 1.7 }}>
+        登録後、既存の店舗管理者による承認が必要です
       </div>
       <div style={{ fontSize: 11, color: T.textMute, marginTop: 10, lineHeight: 1.6 }}>
         権限ロール:店舗管理者 / スタッフ(記録入力)。会員側とは認証を分離しています。

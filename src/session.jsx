@@ -37,16 +37,10 @@ export function SessionProvider({ children }) {
       }
       // 管理者かどうかを admins テーブルで判定する。
       // 会員が同じ問い合わせをしても RLS により 0 件になる。
-      const [a, m] = await Promise.all([
-        supabase
-          .from("admins")
-          .select("id, name, role, store_id, must_change_password, can_approve_menus")
-          .eq("auth_user_id", s.user.id)
-          .maybeSingle(),
-        authApi.getMyProfile(),
-      ]);
+      // 承認待ちの管理者は RLS で admins を読めないため、専用の入口で取得する
+      const [a, m] = await Promise.all([authApi.getMyAdmin(), authApi.getMyProfile()]);
       if (!alive) return;
-      setAdmin(a.data || null);
+      setAdmin(a.data?.[0] || null);
       setMember(m.data?.[0] || null);
       setLoading(false);
     }
@@ -109,6 +103,8 @@ export function RequireAdmin({ children, storeAdminOnly = false }) {
   const { session, admin, loading } = useSession();
   if (loading) return <Loading />;
   if (!session || !admin) return <Navigate to="/admin/login" replace />;
+  // 登録はされたが、まだ承認されていない
+  if (admin.status === "pending") return <PendingApproval name={admin.name} />;
   if (storeAdminOnly && admin.role !== "admin") {
     return (
       <div style={{ padding: 40, textAlign: "center", color: T.textMute, fontFamily: font, fontSize: 13 }}>
@@ -117,4 +113,56 @@ export function RequireAdmin({ children, storeAdminOnly = false }) {
     );
   }
   return children;
+}
+
+// 登録済みだが未承認の管理者に出す画面
+function PendingApproval({ name }) {
+  return (
+    <div
+      style={{
+        maxWidth: 400,
+        margin: "0 auto",
+        fontFamily: font,
+        background: T.bg,
+        border: `1px solid ${T.border}`,
+        borderRadius: 18,
+        overflow: "hidden",
+      }}
+    >
+      <div style={{ background: T.navy, padding: "14px 16px" }}>
+        <div style={{ color: T.onDark, fontWeight: 500, fontSize: 15 }}>承認待ち</div>
+        <div style={{ color: "rgba(255,255,255,.82)", fontSize: 11 }}>{name} さん</div>
+      </div>
+      <div style={{ padding: 18 }}>
+        <div
+          style={{
+            background: T.amberSoft,
+            color: T.amberDark,
+            borderRadius: 8,
+            padding: "11px 13px",
+            fontSize: 12,
+            lineHeight: 1.8,
+            marginBottom: 14,
+          }}
+        >
+          管理者としての登録は完了していますが、まだ承認されていません。
+          既存の店舗管理者が承認すると、管理画面をご利用いただけます。
+        </div>
+        <div style={{ fontSize: 11.5, color: T.textMute, lineHeight: 1.8 }}>
+          店舗管理者の方は「トレーナー」の画面から承認できます。
+        </div>
+        <div
+          onClick={async () => {
+            await authApi.signOut();
+            window.location.href = "/admin/login";
+          }}
+          role="button"
+          tabIndex={0}
+          style={{ textAlign: "center", fontSize: 11.5, color: T.accent, marginTop: 18, cursor: "pointer" }}
+        >
+          ログアウト
+        </div>
+      </div>
+    </div>
+  );
 }

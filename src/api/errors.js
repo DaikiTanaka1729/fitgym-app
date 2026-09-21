@@ -42,6 +42,9 @@ const ERROR_MESSAGES = {
   cannot_delete_self: "自分自身は削除できません",
   staff_in_use: "予約が入っている受付枠が残っているため削除できません",
   too_many_requests: "しばらく時間をおいて再度お試しください",
+  already_registered: "このアカウントは既に管理者として登録されています",
+  member_account: "会員として登録済みのメールアドレスでは管理者登録できません",
+  store_not_found: "店舗が登録されていません",
   // 汎用
   network: "通信エラーが発生しました。接続をご確認ください",
   unknown: "エラーが発生しました。時間をおいて再度お試しください",

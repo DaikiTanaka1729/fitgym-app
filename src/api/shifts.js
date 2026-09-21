@@ -14,7 +14,7 @@ export const shiftApi = {
     return apiCall(() =>
       supabase
         .from("admins")
-        .select("id, name, email, role, can_approve_menus")
+        .select("id, name, email, role, status, can_approve_menus, auth_user_id")
         .order("created_at")
     );
   },
@@ -42,8 +42,14 @@ export const shiftApi = {
 
   // 予約の入っていない受付枠は一緒に削除される。
   // 予約が残っている場合は削除できない(staff_in_use)。
+  // 認証アカウントを持つ管理者の場合、そちらも一緒に削除される。
   deleteStaff({ adminId }) {
     return apiCall(() => supabase.rpc("delete_staff", { p_admin_id: adminId }));
+  },
+
+  // 承認待ちの管理者を承認する。店舗管理者のみ。
+  approveAdmin({ adminId, role = "staff" }) {
+    return apiCall(() => supabase.rpc("approve_admin", { p_admin_id: adminId, p_role: role }));
   },
 
   // 担当できるメニューの紐づけ

@@ -1,9 +1,13 @@
 // ============================================================
 // 配布用QRコードを作る
 // ------------------------------------------------------------
-//   npm run qr -- https://fitgym-app.vercel.app
+//   npm run qr -- https://example.vercel.app
 //
-// dist-qr/ に PNG(印刷用・1200px)と SVG(拡大しても劣化しない)を出力する。
+// 会員用と管理者用の2種類を dist-qr/ に出力する。
+//   会員用   … そのままトップ(ログイン画面)へ
+//   管理者用 … /admin/login へ
+//
+// それぞれ PNG(印刷用・1200px)と SVG(拡大しても劣化しない)を作る。
 // スマホのカメラで読み取ると当アプリが開き、「ホーム画面に追加」で
 // アイコンが常駐する。
 // ============================================================
@@ -33,14 +37,25 @@ if (!url.startsWith("https://")) {
 const outDir = "dist-qr";
 await mkdir(outDir, { recursive: true });
 
+const base = url.replace(/\/+$/, "");
+
+// 会員用は緑、管理者用はネイビー。印刷したときに取り違えないよう色を分ける。
+const targets = [
+  { name: "member", label: "会員用", to: base + "/login", dark: "#1A9E6E" },
+  { name: "admin", label: "管理者用", to: base + "/admin/login", dark: "#1E2761" },
+];
+
 // 誤り訂正レベル M。印刷して壁に貼る用途なら十分。
-const options = { errorCorrectionLevel: "M", margin: 2, color: { dark: "#1E2761", light: "#FFFFFF" } };
+for (const t of targets) {
+  const options = { errorCorrectionLevel: "M", margin: 2, color: { dark: t.dark, light: "#FFFFFF" } };
 
-await QRCode.toFile(path.join(outDir, "fitgym-qr.png"), url, { ...options, width: 1200 });
+  await QRCode.toFile(path.join(outDir, `qr-${t.name}.png`), t.to, { ...options, width: 1200 });
 
-const svg = await QRCode.toString(url, { ...options, type: "svg" });
-await writeFile(path.join(outDir, "fitgym-qr.svg"), svg, "utf8");
+  const svg = await QRCode.toString(t.to, { ...options, type: "svg" });
+  await writeFile(path.join(outDir, `qr-${t.name}.svg`), svg, "utf8");
 
-console.log(`QRコードを生成しました: ${url}`);
-console.log(`  ${path.join(outDir, "fitgym-qr.png")}  (印刷用 1200px)`);
-console.log(`  ${path.join(outDir, "fitgym-qr.svg")}  (拡大しても劣化しません)`);
+  console.log(`${t.label}  ${t.to}`);
+  console.log(`  ${path.join(outDir, `qr-${t.name}.png`)}  (印刷用 1200px)`);
+  console.log(`  ${path.join(outDir, `qr-${t.name}.svg`)}  (拡大しても劣化しません)`);
+  console.log("");
+}

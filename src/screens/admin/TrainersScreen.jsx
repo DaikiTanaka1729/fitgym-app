@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { T, radius } from "../../theme/tokens";
-import { Banner, Button, Spinner, TextField, Toast } from "../../components";
+import { Badge, Banner, Button, Spinner, TextField, Toast } from "../../components";
 import { menuApi, shiftApi } from "../../api";
 import { useSession } from "../../session";
 import AdminLayout from "./AdminLayout";
@@ -59,6 +59,19 @@ export default function TrainersScreen() {
     }
     setForm(null);
     flash(form.id ? "トレーナー情報を更新しました" : "トレーナーを追加しました");
+    load();
+  }
+
+  async function approve(s, role) {
+    setBanner(null);
+    setBusy(`ok:${s.id}`);
+    const { error } = await shiftApi.approveAdmin({ adminId: s.id, role });
+    setBusy(null);
+    if (error) {
+      setBanner(error);
+      return;
+    }
+    flash(`${s.name} さんを承認しました`);
     load();
   }
 
@@ -232,9 +245,24 @@ export default function TrainersScreen() {
                 <tr key={s.id} style={{ background: i % 2 ? T.bgSubtle : T.bg }}>
                   <td style={td({ left: true })}>
                     <div style={{ fontWeight: 500 }}>{s.name}</div>
-                    <div style={{ fontSize: 10.5, color: T.textFaint }}>
-                      {s.role === "admin" ? "店舗管理者" : "スタッフ"}
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+                      <span style={{ fontSize: 10.5, color: T.textFaint }}>
+                        {s.role === "admin" ? "店舗管理者" : "スタッフ"}
+                      </span>
+                      {s.status === "pending" && <Badge tone="amber">承認待ち</Badge>}
+                      {s.auth_user_id && s.status === "active" && <Badge tone="navy">ログイン可</Badge>}
                     </div>
+
+                    {s.status === "pending" && isStoreAdmin && (
+                      <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+                        <Button variant="navy" onClick={() => approve(s, "staff")} loading={busy === `ok:${s.id}`}>
+                          スタッフとして承認
+                        </Button>
+                        <Button variant="ghost" onClick={() => approve(s, "admin")} loading={busy === `ok:${s.id}`}>
+                          店舗管理者として承認
+                        </Button>
+                      </div>
+                    )}
                     {isStoreAdmin && (
                       <div style={{ display: "flex", gap: 10, marginTop: 4, fontSize: 11 }}>
                         <span
@@ -338,6 +366,10 @@ export default function TrainersScreen() {
         「メニュー承認」にチェックが入っている人だけが、仮登録されたメニューを会員に公開できます。変更できるのは店舗管理者のみです。
         <br />
         削除すると、予約が入っていない受付枠も一緒に消えます。予約が残っている場合は削除できません。
+        <br />
+        管理者ログイン画面から新規登録された方は「承認待ち」として並びます。承認するまで管理画面は操作できません。
+        <br />
+        「ログイン可」の方を削除すると、認証アカウントも一緒に削除されます。
       </div>
     </AdminLayout>
   );

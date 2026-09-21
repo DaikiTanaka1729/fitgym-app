@@ -77,4 +77,22 @@ export const authApi = {
   clearMustChangePassword() {
     return apiCall(() => supabase.rpc("clear_must_change_password"));
   },
+
+  // 管理者の新規登録。認証アカウントを作ったあと admins 行を登録する。
+  // 戻り値は 'active'(店舗に管理者がいない初回は自動承認)か 'pending'。
+  async signUpAdmin({ name, email, password }) {
+    const up = await apiCall(() => supabase.auth.signUp({ email, password }));
+    if (up.error) return up;
+
+    // メール確認が必要な設定だとセッションが張られず、続く登録ができない
+    if (!up.data?.session) {
+      return { data: null, error: "確認メールをご確認のうえ、ログインしてから再度お試しください" };
+    }
+    return apiCall(() => supabase.rpc("register_admin", { p_name: name }));
+  },
+
+  // 自分の管理者情報。承認待ちでも取得できる。
+  getMyAdmin() {
+    return apiCall(() => supabase.rpc("get_my_admin"));
+  },
 };
