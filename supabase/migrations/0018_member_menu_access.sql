@@ -176,8 +176,21 @@ GRANT  EXECUTE ON FUNCTION list_my_menus() TO authenticated;
 -- 引数が増えるため、CREATE OR REPLACE では置き換えられない。
 -- 古い定義を消してから作り直す(残すと呼び出しが曖昧になる)。
 -- ------------------------------------------------------------
-DROP FUNCTION IF EXISTS create_reservation(UUID, TIMESTAMPTZ, UUID);
-DROP FUNCTION IF EXISTS create_reservation(UUID, TIMESTAMPTZ, UUID, BOOLEAN);
+-- 同じ名前の関数を、引数の形にかかわらずすべて消す。
+-- 引数の数を変えると古い形が残り、CREATE が
+-- 「already exists with same argument types」で止まるため。
+DO $drop$
+DECLARE r RECORD;
+BEGIN
+  FOR r IN SELECT p.oid::regprocedure AS sig
+             FROM pg_proc p
+            WHERE p.proname = 'create_reservation'
+              AND p.pronamespace = 'public'::regnamespace
+  LOOP
+    EXECUTE 'DROP FUNCTION IF EXISTS ' || r.sig || ' CASCADE';
+  END LOOP;
+END
+$drop$;
 
 CREATE FUNCTION create_reservation(
   p_menu_id            UUID,
