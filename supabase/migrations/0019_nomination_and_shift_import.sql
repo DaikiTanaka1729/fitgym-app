@@ -73,8 +73,13 @@ ALTER TABLE reservations
 -- nominatable      … このメニューに指名券を使えるか(券を持っているか)
 -- nomination_left  … 使える指名券の残り回数
 -- 指名券そのものは予約できないので一覧から外す。
+--
+-- 返す列が増えるため、CREATE OR REPLACE では置き換えられない。
+-- 一度削除してから作り直す。
 -- ------------------------------------------------------------
-CREATE OR REPLACE FUNCTION list_my_menus()
+DROP FUNCTION IF EXISTS list_my_menus();
+
+CREATE FUNCTION list_my_menus()
 RETURNS TABLE (
   id              UUID,
   name            TEXT,
