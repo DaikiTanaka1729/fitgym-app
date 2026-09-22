@@ -1,18 +1,20 @@
 import React, { useRef, useState } from "react";
 import { T, radius } from "../../theme/tokens";
 import { Badge, Banner, Button, Spinner } from "../../components";
-import { downloadCsv, shiftApi } from "../../api";
+import { shiftApi } from "../../api";
 import { APP_SLUG } from "../../appConfig";
-import { buildTemplate, readShiftCsv } from "./shiftCsv";
+import { readShiftCsv, readShiftTable } from "./shiftCsv";
+import { buildWorkbook, nextMonth, readWorkbook } from "./shiftXlsx";
 
-// 受付枠のCSV取り込み(トレーナー画面に組み込む)
+// 受付枠の取り込み(トレーナー画面に組み込む)
 // ------------------------------------------------------------
 // 出勤表をそのまま貼れることを優先する。
-//   ・ひな型は、翌月の日付を横軸・30分刻みの時間を縦軸にした表
-//   ・トレーナーごとに1ブロック。全員分が1つのファイルに入る
-//   ・1行が駄目でも残りは登録する(どこが駄目かを返す)
-//   ・同じ枠を二重に作らないので、貼り直しても壊れない
-// 読み書きの中身は shiftCsv.js にまとめてある。
+//   ・ひな型は Excel。トレーナー1人につき1シート
+//   ・横が日付、縦が30分刻み。開始 / 終了 はプルダウンで選ぶ
+//   ・月は画面で選べる(既定は翌月)
+//   ・1件が駄目でも残りは登録する(どこが駄目かを返す)
+// ひな型の作成と読み込みは shiftXlsx.js、解析は shiftCsv.js。
+// 以前のCSV(表形式・行形式)も引き続き読める。
 // ------------------------------------------------------------
 
 export default function ShiftCsvSection({ staff = [], onDone }) {
@@ -26,6 +28,8 @@ export default function ShiftCsvSection({ staff = [], onDone }) {
   const [format, setFormat] = useState(null);
   const [scope, setScope] = useState([]);
   const [replace, setReplace] = useState(false);
+  const [month, setMonth] = useState(nextMonth());
+  const [making, setMaking] = useState(false);
 
   function reset() {
     setRows(null);
@@ -37,22 +41,24 @@ export default function ShiftCsvSection({ staff = [], onDone }) {
     if (fileRef.current) fileRef.current.value = "";
   }
 
-  function readFile(file) {
+  async function readFile(file) {
     reset();
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        parse(String(reader.result));
-      } catch (e) {
-        setBanner("CSVを読み取れませんでした。文字コードは UTF-8 で保存してください。");
-      }
-    };
-    reader.onerror = () => setBanner("ファイルを読み込めませんでした");
-    reader.readAsText(file, "UTF-8");
+    const isExcel = /\.xlsx?$/i.test(file.name);
+    try {
+      const out = isExcel
+        ? readShiftTable(await readWorkbook(file))
+        : readShiftCsv(await file.text());
+      apply(out);
+    } catch (e) {
+      setBanner(
+        isExcel
+          ? "Excelファイルを読み取れませんでした。ひな型をダウンロードしてお使いください。"
+          : "CSVを読み取れませんでした。文字コードは UTF-8 で保存してください。"
+      );
+    }
   }
 
-  function parse(text) {
-    const { ranges, errors, fatal, format, scope: scopeOf } = readShiftCsv(text);
+  function apply({ ranges, errors, fatal, format, scope: scopeOf }) {
     if (fatal) {
       setBanner(fatal);
       return;
@@ -83,8 +89,23 @@ export default function ShiftCsvSection({ staff = [], onDone }) {
     onDone?.();
   }
 
-  function template() {
-    downloadCsv(`${APP_SLUG}_shifts_${nextMonth()}.csv`, buildTemplate(staff));
+  async function template() {
+    setBanner(null);
+    setMaking(true);
+    try {
+      const blob = await buildWorkbook(staff, month);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${APP_SLUG}_shifts_${month}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) {
+      setBanner("ひな型を作れませんでした。時間をおいて再度お試しください。");
+    }
+    setMaking(false);
   }
 
   const madeTotal = (result || []).reduce((a, r) => a + (r.created || 0), 0);
@@ -109,7 +130,7 @@ export default function ShiftCsvSection({ staff = [], onDone }) {
           cursor: "pointer",
         }}
       >
-        <span style={{ fontSize: 12.5, fontWeight: 500 }}>受付枠をCSVでまとめて登録</span>
+        <span style={{ fontSize: 12.5, fontWeight: 500 }}>受付枠をまとめて登録(Excel)</span>
         <span style={{ fontSize: 11, color: T.textMute }}>{open ? "▲" : "▼"}</span>
       </div>
 
@@ -118,26 +139,44 @@ export default function ShiftCsvSection({ staff = [], onDone }) {
           {banner && <Banner>{banner}</Banner>}
 
           <div style={{ fontSize: 11.5, color: T.textMute, lineHeight: 1.9, marginBottom: 14 }}>
-            「見本をダウンロード」で<strong>翌月のひな型</strong>が出ます。横が日付、縦が30分刻みの時間で、
-            トレーナー全員分が1つのファイルに入っています。
+            月を選んで「ひな型をダウンロード」を押すと、Excelのひな型が出ます。
+            <strong>トレーナー1人につき1シート</strong>、横が日付、縦が30分刻みの時間です。
             <br />
-            出勤する時間の<strong>「開始」と「終了」のセルに、開始 / 終了 と入力</strong>して読み込ませてください。
-            1日に2回出勤する場合は、開始と終了を2組書きます。
+            出勤する時間の<strong>「開始」と「終了」のセルで、プルダウンから選んで</strong>ください。
+            手入力ではないので表記ゆれが起きません。1日に2回出勤する場合は、開始と終了を2組選びます。
             <br />
-            終了の時刻そのものの枠は作りません(18:00 と書くと最後の枠は 17:30 開始です)。
+            終了の時刻そのものの枠は作りません(18:00 を選ぶと最後の枠は 17:30 開始です)。
             <br />
-            同じファイルを二度読み込んでも壊れません。直した出勤表を出し直すときは、
-            登録前に出る<strong>「この期間の枠を入れ替える」</strong>にチェックを入れてください。
+            直した出勤表を出し直すときは、登録前に出る
+            <strong>「この期間の枠を入れ替える」</strong>にチェックを入れてください。
           </div>
 
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
-            <Button variant="ghost" onClick={template}>
-              見本をダウンロード
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 14 }}>
+            <input
+              type="month"
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+              style={{
+                background: T.field,
+                border: `1px solid ${T.fieldBorder}`,
+                borderRadius: radius.md,
+                padding: "8px 10px",
+                fontSize: 12,
+                color: T.text,
+                outline: "none",
+              }}
+            />
+            <Button variant="ghost" onClick={template} loading={making}>
+              ひな型をダウンロード
             </Button>
+          </div>
+
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 14 }}>
+            <span style={{ fontSize: 11.5, color: T.textMute }}>記入したファイル:</span>
             <input
               ref={fileRef}
               type="file"
-              accept=".csv,text/csv"
+              accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               onChange={(e) => e.target.files?.[0] && readFile(e.target.files[0])}
               style={{ fontSize: 12, color: T.textMute }}
             />
@@ -169,7 +208,7 @@ export default function ShiftCsvSection({ staff = [], onDone }) {
           {rows && rows.length > 0 && (
             <>
               <div style={{ fontSize: 12, fontWeight: 500, marginBottom: 8 }}>
-                この内容で登録します(出勤 {rows.length} 件{format === "grid" ? "・表形式" : ""})
+                この内容で登録します(出勤 {rows.length} 件)
               </div>
               <div style={{ overflowX: "auto", marginBottom: 14 }}>
                 <table style={{ borderCollapse: "collapse", width: "100%", minWidth: 560, fontSize: 12 }}>
@@ -288,14 +327,6 @@ export default function ShiftCsvSection({ staff = [], onDone }) {
       )}
     </div>
   );
-}
-
-// ファイル名に入れる翌月(2026-10)
-function nextMonth() {
-  const d = new Date();
-  d.setDate(1);
-  d.setMonth(d.getMonth() + 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
 const thStyle = {

@@ -120,16 +120,23 @@ function parseGrid(table) {
   const ranges = [];
   const errors = [];
   const scope = [];   // ファイルが扱っている範囲。入れ替え取り込みに使う。
-  let month = null;
 
-  // 対象月(あれば)
-  for (const r of table) {
+  // 対象月。Excel はシートごとに持つので、その行より上で一番近いものを使う。
+  const monthAt = [];
+  table.forEach((r, i) => {
     if (/^(対象月|月)$/.test(norm(r[0]))) {
       const m = norm(r[1]).match(/^(\d{4})[/-](\d{1,2})$/);
-      if (m) month = `${m[1]}-${m[2].padStart(2, "0")}`;
-      break;
+      if (m) monthAt.push({ at: i, month: `${m[1]}-${m[2].padStart(2, "0")}` });
     }
-  }
+  });
+  const monthFor = (line) => {
+    let found = null;
+    for (const x of monthAt) {
+      if (x.at <= line) found = x.month;
+      else break;
+    }
+    return found || monthAt[0]?.month || null;
+  };
 
   // トレーナーの行でブロックに切る
   const heads = [];
@@ -151,6 +158,7 @@ function parseGrid(table) {
       return;
     }
 
+    const month = monthFor(at);
     const dates = table[headAt].map((c, i) => (i === 0 ? null : headerDate(c, month)));
     if (!dates.some(Boolean)) {
       errors.push({ line: headAt + 1, why: `${label}:日付の見出しを読み取れません(対象月の行をご確認ください)` });
@@ -286,7 +294,11 @@ function parseRows(table) {
 // 形式を見分けて読む
 // ------------------------------------------------------------
 export function readShiftCsv(text) {
-  const table = parseCsv(text);
+  return readShiftTable(parseCsv(text));
+}
+
+// 表(行×列の配列)を読む。CSV も Excel もここに合流する。
+export function readShiftTable(table) {
   // 「時間」で始まる行があるのは表形式だけ。行形式の見出しは
   // 「トレーナー,日付,…」で、1列目に時間が来ることはない。
   const isGrid = table.some((r) => /^(時間|時刻|time)$/.test(norm(r[0])));
