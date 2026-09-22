@@ -177,6 +177,7 @@ GRANT  EXECUTE ON FUNCTION list_my_menus() TO authenticated;
 -- 古い定義を消してから作り直す(残すと呼び出しが曖昧になる)。
 -- ------------------------------------------------------------
 DROP FUNCTION IF EXISTS create_reservation(UUID, TIMESTAMPTZ, UUID);
+DROP FUNCTION IF EXISTS create_reservation(UUID, TIMESTAMPTZ, UUID, BOOLEAN);
 
 CREATE FUNCTION create_reservation(
   p_menu_id            UUID,

@@ -254,7 +254,9 @@ GRANT  EXECUTE ON FUNCTION list_available_trainers(TIMESTAMPTZ, UUID) TO authent
 --
 -- 引数が増えるため、古い定義を消してから作り直す。
 -- ------------------------------------------------------------
+DROP FUNCTION IF EXISTS create_reservation(UUID, TIMESTAMPTZ, UUID);
 DROP FUNCTION IF EXISTS create_reservation(UUID, TIMESTAMPTZ, UUID, BOOLEAN);
+DROP FUNCTION IF EXISTS create_reservation(UUID, TIMESTAMPTZ, UUID, BOOLEAN, UUID);
 
 CREATE FUNCTION create_reservation(
   p_menu_id            UUID,

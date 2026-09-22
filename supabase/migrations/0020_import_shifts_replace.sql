@@ -73,7 +73,10 @@ REVOKE EXECUTE ON FUNCTION resolve_staff(UUID, TEXT) FROM PUBLIC, anon;
 GRANT  EXECUTE ON FUNCTION resolve_staff(UUID, TEXT) TO authenticated;
 
 -- 戻り値の列が増えるため、古い定義を消してから作り直す。
+-- 引数違いで残っていると CREATE が通らないので、両方の形を消す。
+-- (このファイルを二度実行しても通るようにするため)
 DROP FUNCTION IF EXISTS import_shifts(JSONB);
+DROP FUNCTION IF EXISTS import_shifts(JSONB, BOOLEAN, JSONB);
 
 CREATE FUNCTION import_shifts(
   p_rows    JSONB,
