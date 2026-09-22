@@ -24,6 +24,8 @@ export default function ShiftCsvSection({ staff = [], onDone }) {
   const [result, setResult] = useState(null);  // 登録後の結果
   const [saving, setSaving] = useState(false);
   const [format, setFormat] = useState(null);
+  const [scope, setScope] = useState([]);
+  const [replace, setReplace] = useState(false);
 
   function reset() {
     setRows(null);
@@ -31,6 +33,7 @@ export default function ShiftCsvSection({ staff = [], onDone }) {
     setResult(null);
     setBanner(null);
     setFormat(null);
+    setScope([]);
     if (fileRef.current) fileRef.current.value = "";
   }
 
@@ -49,7 +52,7 @@ export default function ShiftCsvSection({ staff = [], onDone }) {
   }
 
   function parse(text) {
-    const { ranges, errors, fatal, format } = readShiftCsv(text);
+    const { ranges, errors, fatal, format, scope: scopeOf } = readShiftCsv(text);
     if (fatal) {
       setBanner(fatal);
       return;
@@ -57,6 +60,7 @@ export default function ShiftCsvSection({ staff = [], onDone }) {
     setRows(ranges.map((r, i) => ({ ...r, key: i })));
     setBad(errors);
     setFormat(format);
+    setScope(scopeOf || []);
     if (ranges.length === 0) setBanner("登録できる出勤がありませんでした");
   }
 
@@ -65,6 +69,8 @@ export default function ShiftCsvSection({ staff = [], onDone }) {
     setSaving(true);
     const { data, error } = await shiftApi.importShifts({
       rows: rows.map(({ key, label, ...r }) => r),
+      replace,
+      scope: scope.map(({ label, ...r }) => r),
     });
     setSaving(false);
     if (error) {
@@ -82,6 +88,8 @@ export default function ShiftCsvSection({ staff = [], onDone }) {
   }
 
   const madeTotal = (result || []).reduce((a, r) => a + (r.created || 0), 0);
+  const removedTotal = (result || []).reduce((a, r) => a + (r.removed || 0), 0);
+  const keptTotal = (result || []).reduce((a, r) => a + (r.kept || 0), 0);
   const failed = (result || []).filter((r) => r.error);
 
   return (
@@ -118,7 +126,8 @@ export default function ShiftCsvSection({ staff = [], onDone }) {
             <br />
             終了の時刻そのものの枠は作りません(18:00 と書くと最後の枠は 17:30 開始です)。
             <br />
-            すでにある枠は作り直さないので、同じファイルを二度読み込んでも壊れません。
+            同じファイルを二度読み込んでも壊れません。直した出勤表を出し直すときは、
+            登録前に出る<strong>「この期間の枠を入れ替える」</strong>にチェックを入れてください。
           </div>
 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
@@ -189,9 +198,49 @@ export default function ShiftCsvSection({ staff = [], onDone }) {
                 )}
               </div>
 
+              <div
+                onClick={() => setReplace(!replace)}
+                role="button"
+                tabIndex={0}
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 10,
+                  border: `1px solid ${replace ? T.navy : T.fieldBorder}`,
+                  background: replace ? T.navySoft : T.bg,
+                  borderRadius: radius.lg,
+                  padding: "11px 13px",
+                  marginBottom: 14,
+                  cursor: "pointer",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={replace}
+                  onChange={() => setReplace(!replace)}
+                  style={{ width: 16, height: 16, accentColor: T.navy, marginTop: 2, cursor: "pointer" }}
+                />
+                <div>
+                  <div style={{ fontSize: 12.5, fontWeight: 500 }}>この期間の枠を入れ替える</div>
+                  <div style={{ fontSize: 11, color: T.textMute, lineHeight: 1.8, marginTop: 3 }}>
+                    {scope.length > 0 && (
+                      <>
+                        対象:{scope.map((x) => `${x.label}(${x.from} 〜 ${x.to})`).join(" / ")}
+                        <br />
+                      </>
+                    )}
+                    チェックを入れると、上の期間にある既存の枠を一度消してから登録し直します。
+                    出勤表を直して出し直すときはこちらです。
+                    <strong>予約が入っている枠は消しません。</strong>
+                    <br />
+                    チェックを外したままなら、足りない枠を足すだけです(既存の枠はそのまま残ります)。
+                  </div>
+                </div>
+              </div>
+
               <div style={{ display: "flex", gap: 8 }}>
                 <Button variant="navy" onClick={submit} loading={saving}>
-                  この内容で登録する
+                  {replace ? "入れ替えて登録する" : "この内容で登録する"}
                 </Button>
                 <Button variant="ghost" onClick={reset}>
                   やめる
@@ -213,13 +262,17 @@ export default function ShiftCsvSection({ staff = [], onDone }) {
                 <Badge tone={failed.length ? "amber" : "primary"}>
                   {failed.length ? "一部が登録できませんでした" : "登録しました"}
                 </Badge>
-                <span style={{ fontSize: 12 }}>受付枠 {madeTotal} 件を作成</span>
+                <span style={{ fontSize: 12 }}>
+                  受付枠 {madeTotal} 件を作成
+                  {removedTotal > 0 && ` · ${removedTotal} 件を削除`}
+                  {keptTotal > 0 && ` · 予約があるため ${keptTotal} 件はそのまま`}
+                </span>
               </div>
               {failed.length > 0 && (
                 <div style={{ fontSize: 11.5, color: T.dangerDark, lineHeight: 1.8 }}>
-                  {failed.map((f) => (
-                    <div key={f.row_no}>
-                      {f.row_no}件目({f.staff}) … {f.error}
+                  {failed.map((f, i) => (
+                    <div key={i}>
+                      {f.row_no ? `${f.row_no}件目` : "入れ替え"}({f.staff}) … {f.error}
                     </div>
                   ))}
                 </div>

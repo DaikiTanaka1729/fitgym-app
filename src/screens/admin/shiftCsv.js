@@ -119,6 +119,7 @@ function headerDate(cell, month) {
 function parseGrid(table) {
   const ranges = [];
   const errors = [];
+  const scope = [];   // ファイルが扱っている範囲。入れ替え取り込みに使う。
   let month = null;
 
   // 対象月(あれば)
@@ -155,6 +156,12 @@ function parseGrid(table) {
       errors.push({ line: headAt + 1, why: `${label}:日付の見出しを読み取れません(対象月の行をご確認ください)` });
       return;
     }
+
+    // 見出しに出ている日付の範囲が、このトレーナーの対象期間。
+    // 出勤を取り消して空欄にした日も範囲に含めたいので、
+    // 実際の出勤(ranges)ではなく見出しから取る。
+    const known = dates.filter(Boolean).sort();
+    scope.push({ staff, from: known[0], to: known[known.length - 1], label });
 
     // 列ごとに、開始と終了の時刻を拾う
     const marks = {};   // 列番号 -> [{ time, kind }]
@@ -206,7 +213,7 @@ function parseGrid(table) {
     }
   });
 
-  return { ranges, errors };
+  return { ranges, errors, scope };
 }
 
 // ------------------------------------------------------------
@@ -236,7 +243,7 @@ function parseRows(table) {
 
   const cols = body[0].map(headerKey);
   if (!cols.includes("staff") || !cols.includes("date") || !cols.includes("start") || !cols.includes("end")) {
-    return { ranges, errors, fatal: "見出しに「トレーナー」「日付」「開始」「終了」が必要です。見本をダウンロードしてご確認ください。" };
+    return { ranges, errors, scope: [], fatal: "見出しに「トレーナー」「日付」「開始」「終了」が必要です。見本をダウンロードしてご確認ください。" };
   }
 
   body.slice(1).forEach((r, i) => {
@@ -264,7 +271,15 @@ function parseRows(table) {
     ranges.push({ staff, date, date_to: dateTo || date, start, end, capacity, label: staff });
   });
 
-  return { ranges, errors };
+  // 行形式には対象期間の欄がないので、書かれている日付の幅を範囲とみなす
+  const byStaff = {};
+  for (const r of ranges) {
+    const cur = (byStaff[r.staff] ||= { staff: r.staff, from: r.date, to: r.date_to, label: r.staff });
+    if (r.date < cur.from) cur.from = r.date;
+    if (r.date_to > cur.to) cur.to = r.date_to;
+  }
+
+  return { ranges, errors, scope: Object.values(byStaff) };
 }
 
 // ------------------------------------------------------------

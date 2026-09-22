@@ -100,10 +100,24 @@ export const shiftApi = {
   // rows: [{ staff, date, date_to?, start, end, capacity? }]
   //   staff … メールアドレス優先。無ければ氏名で照合する。
   //   end   … その時刻の枠は作らない(18:00 なら最後は 17:30)
+  //
+  // replace … true にすると、scope の期間の枠を一度消してから入れ直す。
+  //   出勤表を直して出し直したときに、短くした分や取り消した日が残らない。
+  //   予約が入っている枠は消さず、kept として返る。
+  // scope … [{ staff, from, to }] ファイルが扱っている期間。
+  //   空欄にした日は rows に現れないため、範囲を別に渡す必要がある。
+  //
   // 行ごとに結果が返るため、一部が駄目でも残りは登録される。
-  // 返り値: [{ row_no, staff, created, error }]
-  importShifts({ rows }) {
-    return apiCall(() => supabase.rpc("import_shifts", { p_rows: rows }));
+  // 返り値: [{ row_no, staff, created, removed, kept, error }]
+  //   row_no = 0 の行は、入れ替えで消した分の報告。
+  importShifts({ rows, replace = false, scope = null }) {
+    return apiCall(() =>
+      supabase.rpc("import_shifts", {
+        p_rows: rows,
+        p_replace: replace,
+        p_scope: replace ? scope : null,
+      })
+    );
   },
 
   // 指定日の枠(管理者向け。定員クローズの操作に使う)
