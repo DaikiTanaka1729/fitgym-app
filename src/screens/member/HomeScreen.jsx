@@ -99,10 +99,14 @@ export default function HomeScreen() {
           >
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
               <div style={{ fontSize: 13, fontWeight: 500 }}>{r.menu_name}</div>
-              <Badge tone={TONE[r.billing_type]}>{LABEL[r.billing_type]}</Badge>
+              <span style={{ display: "flex", gap: 6 }}>
+                {r.nominated && <Badge tone="navy">指名</Badge>}
+                <Badge tone={TONE[r.billing_type]}>{LABEL[r.billing_type]}</Badge>
+              </span>
             </div>
             <div style={{ fontSize: 12, color: T.textMute, marginTop: 5 }}>
               {jstDate(r.start_at)} {jstTime(r.start_at)} 〜 {jstTime(r.end_at)}
+              {r.trainer_name ? ` · 担当 ${r.trainer_name}` : ""}
             </div>
             {r.needs_purchase && (
               <div style={{ fontSize: 11, color: T.amberDark, marginTop: 4 }}>

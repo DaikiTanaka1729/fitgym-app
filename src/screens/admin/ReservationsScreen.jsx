@@ -8,8 +8,9 @@ import AdminLayout from "./AdminLayout";
 import { APP_SLUG } from "../../appConfig";
 import { nextDates } from "../member/format";
 
-const SOURCE = { time: "時間課金", unlimited: "通い放題", ticket: "回数券" };
-const TONE = { time: "primary", unlimited: "accent", ticket: "amber" };
+// membership は 0005 より前に入った予約の値。表示だけ拾えるようにしておく。
+const SOURCE = { time: "時間課金", unlimited: "通い放題", membership: "通い放題", ticket: "回数券" };
+const TONE = { time: "primary", unlimited: "accent", membership: "accent", ticket: "amber" };
 const STATUS = { booked: "予約済", done: "完了", cancelled: "キャンセル" };
 
 const jtime = (v) =>
@@ -28,6 +29,8 @@ export default function ReservationsScreen() {
   const [toast, setToast] = useState(null);
   const [cancelling, setCancelling] = useState(null);
   const [settling, setSettling] = useState(null);
+  const [moving, setMoving] = useState(null);       // 付け替え中の予約
+  const [movable, setMovable] = useState(null);     // 移動先の候補
 
   const load = useCallback(async () => {
     setRows(null);
@@ -74,6 +77,37 @@ export default function ReservationsScreen() {
       return;
     }
     flash("店舗での購入として処理しました");
+    load();
+  }
+
+  // 担当トレーナーの付け替え。指名された予約は対象外(サーバー側でも拒否される)。
+  async function openMove(r) {
+    setBanner(null);
+    setMoving(r.id);
+    setMovable(null);
+    const { data, error } = await reservationApi.listAvailableTrainers({
+      startAt: r.start_at,
+      menuId: r.menu_id,
+    });
+    if (error) {
+      setBanner(error);
+      setMoving(null);
+      return;
+    }
+    // いま担当している本人は候補から外す
+    setMovable((data || []).filter((t) => t.staff_id !== r.staff_id));
+  }
+
+  async function move(reservationId, staffId) {
+    setBanner(null);
+    const { error } = await reservationApi.reassign({ reservationId, staffId });
+    setMoving(null);
+    setMovable(null);
+    if (error) {
+      setBanner(error);
+      return;
+    }
+    flash("担当トレーナーを変更しました");
     load();
   }
 
@@ -184,7 +218,63 @@ export default function ReservationsScreen() {
                       <div style={{ fontSize: 10.5, color: T.textFaint }}>{r.member_email}</div>
                     </td>
                     <td style={tdStyle}>{r.menu_name}</td>
-                    <td style={tdStyle}>{r.trainer_name || "—"}</td>
+                    <td style={tdStyle}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                        <span>{r.trainer_name || "—"}</span>
+                        {r.nominated && <Badge tone="navy">指名</Badge>}
+                        {!cancelled && !r.nominated && moving !== r.id && (
+                          <span
+                            onClick={() => openMove(r)}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => e.key === "Enter" && openMove(r)}
+                            style={{ color: T.accent, cursor: "pointer", fontSize: 11.5 }}
+                          >
+                            変更
+                          </span>
+                        )}
+                      </div>
+
+                      {moving === r.id && (
+                        <div style={{ marginTop: 6 }}>
+                          {movable === null ? (
+                            <Spinner color={T.textFaint} size={14} />
+                          ) : movable.length === 0 ? (
+                            <div style={{ fontSize: 11, color: T.textMute }}>
+                              この時間に空いている他のトレーナーがいません
+                            </div>
+                          ) : (
+                            <select
+                              defaultValue=""
+                              onChange={(e) => e.target.value && move(r.id, e.target.value)}
+                              style={{
+                                background: T.field,
+                                border: `1px solid ${T.fieldBorder}`,
+                                borderRadius: radius.md,
+                                padding: "6px 8px",
+                                fontSize: 11.5,
+                                fontFamily: font,
+                                color: T.text,
+                                outline: "none",
+                              }}
+                            >
+                              <option value="">選んでください</option>
+                              {movable.map((t) => (
+                                <option key={t.staff_id} value={t.staff_id}>{t.name}</option>
+                              ))}
+                            </select>
+                          )}
+                          <div
+                            onClick={() => { setMoving(null); setMovable(null); }}
+                            role="button"
+                            tabIndex={0}
+                            style={{ fontSize: 11, color: T.textFaint, cursor: "pointer", marginTop: 4 }}
+                          >
+                            やめる
+                          </div>
+                        </div>
+                      )}
+                    </td>
                     <td style={tdStyle}>
                       <Badge tone={TONE[r.source]}>{SOURCE[r.source]}</Badge>
                       {r.needs_purchase && !cancelled && (
@@ -225,6 +315,9 @@ export default function ReservationsScreen() {
         <br />
         「要購入」は未購入のメニューで入った予約です。店頭で代金を受け取ったら「購入を反映」を押してください。
         回数券の場合は、先に会員詳細で回数券を付与してから押すと1回分が消費されます。
+        <br />
+        担当の「変更」で、その時間に空いている別のトレーナーへ付け替えられます。
+        「指名」の予約は会員が指名券を使って相手を選んでいるため、付け替えられません。
       </div>
     </AdminLayout>
   );

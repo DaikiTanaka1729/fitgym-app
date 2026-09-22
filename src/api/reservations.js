@@ -32,13 +32,36 @@ export const reservationApi = {
   // allowUnpurchased … 未購入メニューの画面から予約したときだけ true にする。
   //   未購入のまま予約が入ると「店舗でのお支払いが必要」な予約として記録される。
   //   誤操作で未購入の予約が入らないよう、既定は false のままにしておく。
-  create({ menuId, startAt, memberId = null, allowUnpurchased = false }) {
+  //
+  // staffId … 指名するときだけ指定する。指名券を1回消費する。
+  //   指定しない場合は、その時刻に空いているトレーナーから無作為に選ぶ。
+  create({ menuId, startAt, memberId = null, allowUnpurchased = false, staffId = null }) {
     return apiCall(() =>
       supabase.rpc("create_reservation", {
         p_menu_id: menuId,
         p_start_at: startAt,
         p_member_id: memberId,
         p_allow_unpurchased: allowUnpurchased,
+        p_staff_id: staffId,
+      })
+    );
+  },
+
+  // その時刻に指名できるトレーナー。所要時間ぶん空いている人だけが返る。
+  // 返り値: [{ staff_id, name }]
+  listAvailableTrainers({ startAt, menuId }) {
+    return apiCall(() =>
+      supabase.rpc("list_available_trainers", { p_start_at: startAt, p_menu_id: menuId })
+    );
+  },
+
+  // 担当トレーナーの付け替え(管理者)。
+  // 指名された予約は動かせない(nominated_fixed)。
+  reassign({ reservationId, staffId }) {
+    return apiCall(() =>
+      supabase.rpc("reassign_reservation", {
+        p_reservation_id: reservationId,
+        p_staff_id: staffId,
       })
     );
   },

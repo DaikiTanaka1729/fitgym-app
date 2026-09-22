@@ -9,8 +9,9 @@ import MenuAccessSection from "./MenuAccessSection";
 import RecordSection from "./RecordSection";
 import PasswordSection from "./PasswordSection";
 
-const SOURCE = { time: "時間課金", unlimited: "通い放題", ticket: "回数券" };
-const TONE = { time: "primary", unlimited: "accent", ticket: "amber" };
+// membership は 0005 より前に入った予約の値。表示だけ拾えるようにしておく。
+const SOURCE = { time: "時間課金", unlimited: "通い放題", membership: "通い放題", ticket: "回数券" };
+const TONE = { time: "primary", unlimited: "accent", membership: "accent", ticket: "amber" };
 const STATUS = { booked: "予約済", done: "完了", cancelled: "キャンセル" };
 
 const jdt = (v) =>
@@ -232,6 +233,7 @@ export default function MemberDetailScreen() {
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <Badge tone={TONE[r.source]}>{SOURCE[r.source]}</Badge>
+                  {r.nominated && <Badge tone="navy">指名</Badge>}
                   {r.needs_purchase && <Badge tone="danger">要購入</Badge>}
                   {r.needs_purchase && (
                     <Button variant="navy" onClick={() => settle(r.id)} loading={settling === r.id}>

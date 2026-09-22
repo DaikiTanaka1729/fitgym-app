@@ -4,8 +4,9 @@ import { T, font, radius } from "../../theme/tokens";
 import { Badge, Banner, Button, Spinner } from "../../components";
 import { noteApi, reservationApi, shiftApi } from "../../api";
 
-const SOURCE = { time: "時間課金", unlimited: "通い放題", ticket: "回数券" };
-const TONE = { time: "primary", unlimited: "accent", ticket: "amber" };
+// membership は 0005 より前に入った予約の値。表示だけ拾えるようにしておく。
+const SOURCE = { time: "時間課金", unlimited: "通い放題", membership: "通い放題", ticket: "回数券" };
+const TONE = { time: "primary", unlimited: "accent", membership: "accent", ticket: "amber" };
 
 const CELLS = 48; // 30分 × 48 = 24時間
 const HOUR_MARKS = [0, 3, 6, 9, 12, 15, 18, 21, 24];
@@ -279,6 +280,7 @@ export default function TodaySchedule() {
                 )}
                 <span style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
                   {r.needs_purchase && r.status !== "cancelled" && <Badge tone="danger">要購入</Badge>}
+                  {r.nominated && <Badge tone="navy">指名</Badge>}
                   <Badge tone={TONE[r.source]}>{SOURCE[r.source]}</Badge>
                 </span>
               </div>

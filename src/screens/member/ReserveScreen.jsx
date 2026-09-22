@@ -29,6 +29,9 @@ export default function ReserveScreen() {
   const [banner, setBanner] = useState(null);
   const [booking, setBooking] = useState(null);
   const [showOthers, setShowOthers] = useState(false);
+  const [nominate, setNominate] = useState(false);
+  const [picking, setPicking] = useState(null);     // 指名するトレーナーを選ぶ時刻
+  const [trainers, setTrainers] = useState(null);
 
   useEffect(() => {
     menuApi.listMine().then(({ data, error }) => {
@@ -46,23 +49,45 @@ export default function ReserveScreen() {
     });
   }, [menu, date]);
 
-  async function book(startAt) {
+  async function book(startAt, staffId = null) {
     setBanner(null);
     setBooking(startAt);
     const { error } = await reservationApi.create({
       menuId: menu.id,
       startAt,
       allowUnpurchased: !menu.bookable,
+      staffId,
     });
     setBooking(null);
     if (error) {
       setBanner(error);
+      setPicking(null);
       // 満席だった場合は最新の空き状況に取り直す
       const { data } = await reservationApi.listAvailableTimes({ date, menuId: menu.id });
       setTimes(data || []);
       return;
     }
-    navigate("/reserve/done", { state: { menu, startAt, needsPurchase: !menu.bookable } });
+    navigate("/reserve/done", {
+      state: { menu, startAt, needsPurchase: !menu.bookable, nominated: staffId !== null },
+    });
+  }
+
+  // 時刻を押したとき。指名するなら、その時刻にいるトレーナーを出してから決める。
+  async function choose(startAt) {
+    if (!nominate) {
+      book(startAt);
+      return;
+    }
+    setBanner(null);
+    setPicking(startAt);
+    setTrainers(null);
+    const { data, error } = await reservationApi.listAvailableTrainers({ startAt, menuId: menu.id });
+    if (error) {
+      setBanner(error);
+      setPicking(null);
+      return;
+    }
+    setTrainers(data || []);
   }
 
   // ---- ステップ1:メニュー選択 ----
@@ -72,6 +97,8 @@ export default function ReserveScreen() {
 
     const pick = (m) => {
       setMenu(m);
+      setNominate(false);
+      setPicking(null);
       setStep(2);
     };
 
@@ -175,6 +202,38 @@ export default function ReserveScreen() {
           このメニューはまだご購入いただいていません。
           <br />
           時間を選ぶと予約が入りますが、料金のお支払いはご来店時に店舗で承ります。
+        </div>
+      )}
+
+      {menu.nominatable && (
+        <div
+          onClick={() => setNominate(!nominate)}
+          role="button"
+          tabIndex={0}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            border: `1px solid ${nominate ? T.primary : T.fieldBorder}`,
+            background: nominate ? T.primarySoft : T.bg,
+            borderRadius: radius.lg,
+            padding: "11px 13px",
+            marginBottom: 16,
+            cursor: "pointer",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={nominate}
+            onChange={() => setNominate(!nominate)}
+            style={{ width: 17, height: 17, accentColor: T.primary, cursor: "pointer" }}
+          />
+          <div>
+            <div style={{ fontSize: 12.5, fontWeight: 500 }}>トレーナーを指名する</div>
+            <div style={{ fontSize: 11, color: T.textMute, marginTop: 2 }}>
+              指名券を1回使います(残り {menu.nomination_left} 回)
+            </div>
+          </div>
         </div>
       )}
 
@@ -287,7 +346,7 @@ export default function ReserveScreen() {
                         <button
                           key={t.start_at}
                           disabled={disabled || booking !== null}
-                          onClick={() => book(t.start_at)}
+                          onClick={() => choose(t.start_at)}
                           style={{
                             border: `1px solid ${disabled ? T.fieldBorder : T.primary}`,
                             background: disabled ? T.field : T.bg,
@@ -320,6 +379,83 @@ export default function ReserveScreen() {
         <div style={{ marginTop: 14, display: "flex", justifyContent: "center", gap: 8, alignItems: "center" }}>
           <Spinner color={T.primary} size={14} />
           <span style={{ fontSize: 11.5, color: T.textMute }}>予約しています…</span>
+        </div>
+      )}
+
+      {picking && (
+        <div
+          onClick={() => !booking && setPicking(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(20,22,28,0.45)",
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "center",
+            zIndex: 50,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: T.bg,
+              width: "100%",
+              maxWidth: 480,
+              borderRadius: `${radius.lg}px ${radius.lg}px 0 0`,
+              padding: "18px 16px 22px",
+              maxHeight: "72vh",
+              overflowY: "auto",
+            }}
+          >
+            <div style={{ fontSize: 14, fontWeight: 500 }}>トレーナーを選んでください</div>
+            <div style={{ fontSize: 11.5, color: T.textMute, marginTop: 4, marginBottom: 14 }}>
+              {jstTime(picking)} 開始 · 指名券を1回使います
+            </div>
+
+            {trainers === null && (
+              <div style={{ display: "flex", justifyContent: "center", padding: "20px 0" }}>
+                <Spinner color={T.textFaint} size={20} />
+              </div>
+            )}
+
+            {trainers?.length === 0 && (
+              <div style={{ fontSize: 12, color: T.textMute, lineHeight: 1.8, padding: "10px 0 16px" }}>
+                この時間に指名できるトレーナーがいません。
+                <br />
+                別の時間をお選びください。
+              </div>
+            )}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {trainers?.map((t) => (
+                <button
+                  key={t.staff_id}
+                  disabled={booking !== null}
+                  onClick={() => book(picking, t.staff_id)}
+                  style={{
+                    border: `1px solid ${T.primary}`,
+                    background: T.bg,
+                    color: T.primaryDark,
+                    borderRadius: radius.md,
+                    padding: "12px 14px",
+                    fontSize: 13,
+                    fontFamily: font,
+                    fontWeight: 500,
+                    textAlign: "left",
+                    cursor: booking ? "default" : "pointer",
+                  }}
+                >
+                  {t.name}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ marginTop: 14 }}>
+              <Button variant="secondary" full onClick={() => setPicking(null)} disabled={booking !== null}>
+                やめる
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </MemberLayout>

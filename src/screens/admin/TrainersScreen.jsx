@@ -4,6 +4,7 @@ import { Badge, Banner, Button, Spinner, TextField, Toast } from "../../componen
 import { menuApi, shiftApi } from "../../api";
 import { useSession } from "../../session";
 import AdminLayout from "./AdminLayout";
+import ShiftCsvSection from "./ShiftCsvSection";
 
 // A-11 トレーナー × メニューの紐づけ
 // ここで設定した内容が、各時間帯に何件の予約を受けられるかを決める。
@@ -145,6 +146,8 @@ export default function TrainersScreen() {
           <Toast>{toast}</Toast>
         </div>
       )}
+
+      {isStoreAdmin && <ShiftCsvSection onDone={() => flash("受付枠を登録しました")} />}
 
       {form && (
         <div style={{ border: `1px solid ${T.navy}`, borderRadius: radius.lg, padding: 16, marginBottom: 18, maxWidth: 380 }}>

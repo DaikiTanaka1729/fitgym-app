@@ -4,10 +4,11 @@ import { Badge, Banner, Button, DataTable, Segmented, Spinner, TextField, Toast 
 import { menuApi } from "../../api";
 import { useSession } from "../../session";
 import AdminLayout from "./AdminLayout";
+import NominationLinksSection from "./NominationLinksSection";
 
-const TONE = { time: "primary", unlimited: "accent", ticket: "amber" };
+const TONE = { time: "primary", unlimited: "accent", ticket: "amber", nomination: "navy" };
 const STATUS = { draft: { label: "仮登録", tone: "gray" }, published: { label: "公開中", tone: "primary" } };
-const LABEL = { time: "時間課金", unlimited: "通い放題", ticket: "回数券" };
+const LABEL = { time: "時間課金", unlimited: "通い放題", ticket: "回数券", nomination: "指名券" };
 
 const EMPTY = {
   id: null,
@@ -63,10 +64,20 @@ export default function MenusScreen() {
       billing_type: form.billing_type,
       price: num(form.price) ?? 0,
       is_active: form.is_active,
-      duration_min: form.billing_type === "unlimited" ? null : num(form.duration_min),
+      // 指名券は施術ではないので所要時間を持たない。回数と期限は回数券と同じ扱い。
+      duration_min:
+        form.billing_type === "unlimited" || form.billing_type === "nomination"
+          ? null
+          : num(form.duration_min),
       max_active: form.billing_type === "unlimited" ? num(form.max_active) : null,
-      ticket_count: form.billing_type === "ticket" ? num(form.ticket_count) : null,
-      valid_months: form.billing_type === "ticket" ? num(form.valid_months) : null,
+      ticket_count:
+        form.billing_type === "ticket" || form.billing_type === "nomination"
+          ? num(form.ticket_count)
+          : null,
+      valid_months:
+        form.billing_type === "ticket" || form.billing_type === "nomination"
+          ? num(form.valid_months)
+          : null,
     };
 
     setSaving(true);
@@ -134,6 +145,7 @@ export default function MenusScreen() {
                   { value: "time", label: "時間課金" },
                   { value: "unlimited", label: "通い放題" },
                   { value: "ticket", label: "回数券" },
+                  { value: "nomination", label: "指名券" },
                 ]}
               />
             </div>
@@ -163,6 +175,19 @@ export default function MenusScreen() {
                 <TextField label="回数" value={form.ticket_count} onChange={set("ticket_count")} placeholder="10" />
                 <TextField label="有効期限(購入からの月数)" value={form.valid_months} onChange={set("valid_months")} placeholder="6" />
                 <TextField label="価格(税込・円)" value={form.price} onChange={set("price")} placeholder="70000" />
+              </>
+            )}
+
+            {form.billing_type === "nomination" && (
+              <>
+                <TextField label="回数" value={form.ticket_count} onChange={set("ticket_count")} placeholder="5" />
+                <TextField label="有効期限(購入からの月数)" value={form.valid_months} onChange={set("valid_months")} placeholder="6" />
+                <TextField label="価格(税込・円)" value={form.price} onChange={set("price")} placeholder="5000" />
+                <div style={{ fontSize: 11, color: T.textMute, lineHeight: 1.8, margin: "2px 0 14px" }}>
+                  指名券そのものは予約できません。会員は予約のときに「トレーナーを指名する」に
+                  チェックを入れて使います。どのメニューに使えるかは、登録後に一覧の
+                  「適用メニュー」から指定してください。
+                </div>
               </>
             )}
 
@@ -233,7 +258,7 @@ export default function MenusScreen() {
               label: "回数・上限",
               w: "0.9fr",
               render: (v, r) =>
-                r.billing_type === "ticket"
+                r.billing_type === "ticket" || r.billing_type === "nomination"
                   ? `${v ?? "—"}回 / ${r.valid_months ? `${r.valid_months}ヶ月` : "無期限"}`
                   : r.billing_type === "unlimited"
                   ? `同時 ${r.max_active ?? 5} 件`
@@ -301,6 +326,8 @@ export default function MenusScreen() {
           rows={rows}
         />
       )}
+
+      {rows && <NominationLinksSection menus={rows} onFlash={flash} />}
     </AdminLayout>
   );
 }

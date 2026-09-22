@@ -96,6 +96,16 @@ export const shiftApi = {
     );
   },
 
+  // CSVから受付枠をまとめて登録する。店舗管理者のみ。
+  // rows: [{ staff, date, date_to?, start, end, capacity? }]
+  //   staff … メールアドレス優先。無ければ氏名で照合する。
+  //   end   … その時刻の枠は作らない(18:00 なら最後は 17:30)
+  // 行ごとに結果が返るため、一部が駄目でも残りは登録される。
+  // 返り値: [{ row_no, staff, created, error }]
+  importShifts({ rows }) {
+    return apiCall(() => supabase.rpc("import_shifts", { p_rows: rows }));
+  },
+
   // 指定日の枠(管理者向け。定員クローズの操作に使う)
   listByDate({ storeId, date }) {
     const from = `${date}T00:00:00+09:00`;

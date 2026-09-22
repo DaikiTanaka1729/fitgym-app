@@ -13,11 +13,17 @@ function monthsLater(months) {
   return d.toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
 }
 
+// 付与の種類と、対応するメニューの課金タイプ
+const KIND_TYPE = { ticket: "ticket", unlimited: "unlimited", nomination: "nomination" };
+const KIND_LABEL = { ticket: "回数券", unlimited: "通い放題", nomination: "指名券" };
+const KIND_TONE = { ticket: "amber", unlimited: "accent", nomination: "navy" };
+
 const jdate = (v) =>
   v ? new Date(v).toLocaleDateString("ja-JP", { month: "numeric", day: "numeric", year: "numeric" }) : "—";
 
-// A-1 回数券・通い放題の付与(会員詳細に組み込む)
+// A-1 回数券・通い放題・指名券の付与(会員詳細に組み込む)
 // 購入・決済の管理は行わない。「この会員は何回分の権利を持つか」だけを扱う。
+// 指名券は残回数と有効期限の扱いが回数券と同じなので、同じ仕組みで持つ。
 export default function EntitlementSection({ memberId, onFlash }) {
   const { admin } = useSession();
   const [rows, setRows] = useState(null);
@@ -50,9 +56,7 @@ export default function EntitlementSection({ memberId, onFlash }) {
     if (admin) load();
   }, [admin, load]);
 
-  const kindMenus = menus.filter((m) =>
-    form.kind === "ticket" ? m.billing_type === "ticket" : m.billing_type === "unlimited"
-  );
+  const kindMenus = menus.filter((m) => m.billing_type === KIND_TYPE[form.kind]);
 
   // メニューを選んだら、そのメニューの既定値を入れる
   function pickMenu(menuId) {
@@ -78,7 +82,7 @@ export default function EntitlementSection({ memberId, onFlash }) {
 
     setSaving(true);
     let res;
-    if (form.kind === "ticket") {
+    if (form.kind === "ticket" || form.kind === "nomination") {
       const n = Number(form.remaining);
       if (!Number.isInteger(n) || n < 1) {
         setSaving(false);
@@ -113,7 +117,9 @@ export default function EntitlementSection({ memberId, onFlash }) {
     }
     setOpen(false);
     setForm({ ...form, menuId: "" });
-    onFlash?.(form.kind === "ticket" ? "回数券を付与しました" : "通い放題の契約を登録しました");
+    onFlash?.(
+      form.kind === "unlimited" ? "通い放題の契約を登録しました" : `${KIND_LABEL[form.kind]}を付与しました`
+    );
     load();
   }
 
@@ -149,7 +155,7 @@ export default function EntitlementSection({ memberId, onFlash }) {
   return (
     <div style={{ marginBottom: 22 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-        <div style={{ fontSize: 12.5, fontWeight: 500, color: T.textMute }}>回数券・通い放題</div>
+        <div style={{ fontSize: 12.5, fontWeight: 500, color: T.textMute }}>回数券・通い放題・指名券</div>
         {!open && (
           <Button variant="navy" onClick={() => setOpen(true)}>
             付与する
@@ -168,6 +174,7 @@ export default function EntitlementSection({ memberId, onFlash }) {
               options={[
                 { value: "ticket", label: "回数券" },
                 { value: "unlimited", label: "通い放題" },
+                { value: "nomination", label: "指名券" },
               ]}
             />
           </div>
@@ -182,7 +189,7 @@ export default function EntitlementSection({ memberId, onFlash }) {
               </select>
             </Field>
 
-            {form.kind === "ticket" ? (
+            {form.kind !== "unlimited" ? (
               <>
                 <Field label="回数">
                   <TextField value={form.remaining} onChange={(v) => setForm({ ...form, remaining: v })} />
@@ -220,7 +227,7 @@ export default function EntitlementSection({ memberId, onFlash }) {
 
           {kindMenus.length === 0 && (
             <div style={{ fontSize: 11.5, color: T.danger, marginTop: 4 }}>
-              {form.kind === "ticket" ? "回数券" : "通い放題"}のメニューが登録されていません。先にメニュー設定で追加してください。
+              {KIND_LABEL[form.kind]}のメニューが登録されていません。先にメニュー設定で追加してください。
             </div>
           )}
 
@@ -258,7 +265,7 @@ export default function EntitlementSection({ memberId, onFlash }) {
             lineHeight: 1.7,
           }}
         >
-          回数券・通い放題の登録はありません。
+          回数券・通い放題・指名券の登録はありません。
           <br />
           この会員が予約できるのは、上で登録した時間課金のメニューだけです。
         </div>
@@ -283,20 +290,20 @@ export default function EntitlementSection({ memberId, onFlash }) {
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 13, fontWeight: 500 }}>{r.menu_name}</span>
-                <Badge tone={r.kind === "ticket" ? "amber" : "accent"}>
-                  {r.kind === "ticket" ? "回数券" : "通い放題"}
+                <Badge tone={KIND_TONE[r.kind] || "accent"}>
+                  {KIND_LABEL[r.kind] || "通い放題"}
                 </Badge>
                 {!r.is_valid && <Badge tone="gray">利用不可</Badge>}
               </div>
               <div style={{ fontSize: 11.5, color: T.textMute, marginTop: 4 }}>
-                {r.kind === "ticket"
-                  ? `残り ${r.remaining} 回 · 有効期限 ${r.expire_on ? jdate(r.expire_on) : "無期限"}`
-                  : `${jdate(r.start_on)} 〜 ${jdate(r.end_on)}`}
+                {r.kind === "membership"
+                  ? `${jdate(r.start_on)} 〜 ${jdate(r.end_on)}`
+                  : `残り ${r.remaining} 回 · 有効期限 ${r.expire_on ? jdate(r.expire_on) : "無期限"}`}
               </div>
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              {r.kind === "ticket" ? (
+              {r.kind !== "membership" ? (
                 <>
                   <Round onClick={() => adjustTicket(r, -1)} disabled={busy === r.id || r.remaining <= 0}>
                     −

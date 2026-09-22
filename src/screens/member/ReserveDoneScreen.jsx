@@ -27,7 +27,7 @@ export default function ReserveDoneScreen() {
   // 直接URLを開かれた場合はホームへ戻す
   if (!state?.menu || !state?.startAt) return <Navigate to="/home" replace />;
 
-  const { menu, startAt, needsPurchase } = state;
+  const { menu, startAt, needsPurchase, nominated } = state;
   const end = new Date(new Date(startAt).getTime() + menu.duration_min * 60000).toISOString();
 
   return (
@@ -49,6 +49,7 @@ export default function ReserveDoneScreen() {
         <Row label="所要時間" value={`${menu.duration_min}分`} />
         {menu.billing_type === "time" && <Row label="料金" value={`¥${menu.price.toLocaleString()}`} />}
         {menu.billing_type === "ticket" && !needsPurchase && note && <Row label="回数券" value={note} />}
+        {nominated && <Row label="指名" value="トレーナーを指名しました(指名券1回)" />}
       </div>
 
       {needsPurchase && (
