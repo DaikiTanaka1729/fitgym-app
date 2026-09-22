@@ -147,7 +147,10 @@ export default function TrainersScreen() {
         </div>
       )}
 
-      {isStoreAdmin && <ShiftCsvSection onDone={() => flash("受付枠を登録しました")} />}
+      {isStoreAdmin && <ShiftCsvSection
+          staff={(staff || []).filter((x) => x.status === "active")}
+          onDone={() => flash("受付枠を登録しました")}
+        />}
 
       {form && (
         <div style={{ border: `1px solid ${T.navy}`, borderRadius: radius.lg, padding: 16, marginBottom: 18, maxWidth: 380 }}>
