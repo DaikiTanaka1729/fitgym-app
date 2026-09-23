@@ -344,26 +344,41 @@ export default function TrainersScreen() {
                     );
                   })}
                   <td style={td()}>
-                    <button
-                      onClick={() => isStoreAdmin && toggleApproval(s)}
-                      disabled={!isStoreAdmin || busy === `approve:${s.id}`}
-                      aria-pressed={s.can_approve_menus}
-                      title={isStoreAdmin ? "" : "店舗管理者のみ変更できます"}
-                      style={{
-                        width: 30,
-                        height: 30,
-                        borderRadius: 7,
-                        cursor: isStoreAdmin ? "pointer" : "default",
-                        border: `1.5px solid ${s.can_approve_menus ? T.navy : T.fieldBorder}`,
-                        background: s.can_approve_menus ? T.navy : T.bg,
-                        color: T.onDark,
-                        fontSize: 15,
-                        lineHeight: 1,
-                        opacity: isStoreAdmin ? 1 : 0.5,
-                      }}
-                    >
-                      {s.can_approve_menus ? "✓" : ""}
-                    </button>
+                    {/* 店舗管理者は常に公開できる。フラグは
+                        スタッフにも公開を任せるときのための追加指定。 */}
+                    {(() => {
+                      const always = s.role === "admin";
+                      const on = always || s.can_approve_menus;
+                      const editable = isStoreAdmin && !always;
+                      return (
+                        <button
+                          onClick={() => editable && toggleApproval(s)}
+                          disabled={!editable || busy === `approve:${s.id}`}
+                          aria-pressed={on}
+                          title={
+                            always
+                              ? "店舗管理者は常に公開できます"
+                              : isStoreAdmin
+                              ? ""
+                              : "店舗管理者のみ変更できます"
+                          }
+                          style={{
+                            width: 30,
+                            height: 30,
+                            borderRadius: 7,
+                            cursor: editable ? "pointer" : "default",
+                            border: `1.5px solid ${on ? T.navy : T.fieldBorder}`,
+                            background: on ? T.navy : T.bg,
+                            color: T.onDark,
+                            fontSize: 15,
+                            lineHeight: 1,
+                            opacity: editable ? 1 : 0.55,
+                          }}
+                        >
+                          {on ? "✓" : ""}
+                        </button>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))}

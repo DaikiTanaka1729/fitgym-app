@@ -34,7 +34,9 @@ const EMPTY = {
 // A-09 メニュー設定
 export default function MenusScreen() {
   const { admin } = useSession();
-  const canApprove = admin?.can_approve_menus === true;
+  // 店舗管理者は常に公開できる。承認権限のフラグは、
+  // スタッフにも公開を任せたいときの追加指定。
+  const canApprove = admin?.role === "admin" || admin?.can_approve_menus === true;
   const [rows, setRows] = useState(null);
   const [publishing, setPublishing] = useState(null);
   const [form, setForm] = useState(null);
