@@ -18,6 +18,24 @@ const KIND_TYPE = { ticket: "ticket", unlimited: "unlimited", nomination: "nomin
 const KIND_LABEL = { ticket: "回数券", unlimited: "通い放題", nomination: "指名券" };
 const KIND_TONE = { ticket: "amber", unlimited: "accent", nomination: "navy" };
 
+const yen = (v) => `¥${Number(v ?? 0).toLocaleString()}`;
+
+// 販売時に読み上げる一行。回数券は「10回 ¥70,000」のように出す。
+function priceLine(m) {
+  if (!m) return "";
+  const parts = [];
+  if (m.billing_type === "unlimited") {
+    parts.push(`${yen(m.price)} /月`);
+    if (m.max_active) parts.push(`同時予約 ${m.max_active} 件`);
+  } else {
+    if (m.ticket_count) parts.push(`${m.ticket_count}回`);
+    if (m.duration_min) parts.push(`${m.duration_min}分`);
+    parts.push(yen(m.price));
+    if (m.valid_months) parts.push(`有効 ${m.valid_months}ヶ月`);
+  }
+  return parts.join(" · ");
+}
+
 const jdate = (v) =>
   v ? new Date(v).toLocaleDateString("ja-JP", { month: "numeric", day: "numeric", year: "numeric" }) : "—";
 
@@ -57,6 +75,7 @@ export default function EntitlementSection({ memberId, onFlash }) {
   }, [admin, load]);
 
   const kindMenus = menus.filter((m) => m.billing_type === KIND_TYPE[form.kind]);
+  const picked = kindMenus.find((m) => m.id === form.menuId) || null;
 
   // メニューを選んだら、そのメニューの既定値を入れる
   function pickMenu(menuId) {
@@ -184,7 +203,9 @@ export default function EntitlementSection({ memberId, onFlash }) {
               <select value={form.menuId} onChange={(e) => pickMenu(e.target.value)} style={selectStyle}>
                 <option value="">選んでください</option>
                 {kindMenus.map((m) => (
-                  <option key={m.id} value={m.id}>{m.name}</option>
+                  <option key={m.id} value={m.id}>
+                    {m.name}({yen(m.price)})
+                  </option>
                 ))}
               </select>
             </Field>
@@ -224,6 +245,26 @@ export default function EntitlementSection({ memberId, onFlash }) {
               </>
             )}
           </div>
+
+          {picked && (
+            <div
+              style={{
+                border: `1px solid ${T.navy}`,
+                background: T.navySoft,
+                borderRadius: radius.lg,
+                padding: "10px 13px",
+                marginTop: 12,
+                display: "flex",
+                alignItems: "baseline",
+                gap: 10,
+                flexWrap: "wrap",
+              }}
+            >
+              <span style={{ fontSize: 13, fontWeight: 500 }}>{picked.name}</span>
+              <span style={{ fontSize: 16, fontWeight: 600, color: T.navy }}>{yen(picked.price)}</span>
+              <span style={{ fontSize: 11.5, color: T.textMute }}>{priceLine(picked)}</span>
+            </div>
+          )}
 
           {kindMenus.length === 0 && (
             <div style={{ fontSize: 11.5, color: T.danger, marginTop: 4 }}>
@@ -296,6 +337,10 @@ export default function EntitlementSection({ memberId, onFlash }) {
                 {!r.is_valid && <Badge tone="gray">利用不可</Badge>}
               </div>
               <div style={{ fontSize: 11.5, color: T.textMute, marginTop: 4 }}>
+                {(() => {
+                  const m = menus.find((x) => x.id === r.menu_id);
+                  return m ? `${yen(m.price)}${m.billing_type === "unlimited" ? " /月" : ""} · ` : "";
+                })()}
                 {r.kind === "membership"
                   ? `${jdate(r.start_on)} 〜 ${jdate(r.end_on)}`
                   : `残り ${r.remaining} 回 · 有効期限 ${r.expire_on ? jdate(r.expire_on) : "無期限"}`}

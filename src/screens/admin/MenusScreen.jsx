@@ -10,10 +10,19 @@ const TONE = { time: "primary", unlimited: "accent", ticket: "amber", nomination
 const STATUS = { draft: { label: "仮登録", tone: "gray" }, published: { label: "公開中", tone: "primary" } };
 const LABEL = { time: "時間課金", unlimited: "通い放題", ticket: "回数券", nomination: "指名券" };
 
+// 表示順。小さいほど上に出る。数で持つのは、並べ替えのたびに
+// 文字から順位へ読み替える処理を書かなくて済むようにするため。
+const PRIORITY = {
+  1: { label: "高", tone: "primary" },
+  2: { label: "中", tone: "gray" },
+  3: { label: "低", tone: "gray" },
+};
+
 const EMPTY = {
   id: null,
   name: "",
   billing_type: "time",
+  priority: "2",
   duration_min: "60",
   price: "0",
   max_active: "",
@@ -62,6 +71,7 @@ export default function MenusScreen() {
       store_id: admin.store_id,
       name: form.name.trim(),
       billing_type: form.billing_type,
+      priority: num(form.priority) ?? 2,
       price: num(form.price) ?? 0,
       is_active: form.is_active,
       // 指名券は施術ではないので所要時間を持たない。回数と期限は回数券と同じ扱い。
@@ -74,10 +84,10 @@ export default function MenusScreen() {
         form.billing_type === "ticket" || form.billing_type === "nomination"
           ? num(form.ticket_count)
           : null,
+      // 回数券・指名券は有効期限、通い放題は1契約あたりの期間。
+      // 「購入を反映」で契約を作るときの長さになる。
       valid_months:
-        form.billing_type === "ticket" || form.billing_type === "nomination"
-          ? num(form.valid_months)
-          : null,
+        form.billing_type === "time" ? null : num(form.valid_months),
     };
 
     setSaving(true);
@@ -136,6 +146,22 @@ export default function MenusScreen() {
           <div style={{ maxWidth: 420 }}>
             <TextField label="メニュー名" required value={form.name} onChange={set("name")} placeholder="パーソナル60分" />
 
+            <div style={{ fontSize: 11, color: T.textMute, fontWeight: 500, marginBottom: 6 }}>優先度</div>
+            <div style={{ marginBottom: 6 }}>
+              <Segmented
+                value={form.priority}
+                onChange={set("priority")}
+                options={[
+                  { value: "1", label: "高" },
+                  { value: "2", label: "中" },
+                  { value: "3", label: "低" },
+                ]}
+              />
+            </div>
+            <div style={{ fontSize: 11, color: T.textMute, lineHeight: 1.7, marginBottom: 14 }}>
+              高いものから上に並びます。会員の予約画面と、会員詳細の購入登録に効きます。
+            </div>
+
             <div style={{ fontSize: 11, color: T.textMute, fontWeight: 500, marginBottom: 6 }}>課金タイプ</div>
             <div style={{ marginBottom: 14 }}>
               <Segmented
@@ -165,6 +191,12 @@ export default function MenusScreen() {
                   value={form.max_active}
                   onChange={set("max_active")}
                   placeholder="未入力なら 5 件"
+                />
+                <TextField
+                  label="1契約あたりの期間(月数)"
+                  value={form.valid_months}
+                  onChange={set("valid_months")}
+                  placeholder="未入力なら 1 ヶ月"
                 />
               </>
             )}
@@ -236,6 +268,14 @@ export default function MenusScreen() {
       {rows && (
         <DataTable
           columns={[
+            {
+              key: "priority",
+              label: "優先度",
+              w: "0.5fr",
+              render: (v) => (
+                <Badge tone={PRIORITY[v ?? 2]?.tone || "gray"}>{PRIORITY[v ?? 2]?.label || "中"}</Badge>
+              ),
+            },
             { key: "name", label: "メニュー名", w: "1.6fr" },
             {
               key: "billing_type",
@@ -261,7 +301,7 @@ export default function MenusScreen() {
                 r.billing_type === "ticket" || r.billing_type === "nomination"
                   ? `${v ?? "—"}回 / ${r.valid_months ? `${r.valid_months}ヶ月` : "無期限"}`
                   : r.billing_type === "unlimited"
-                  ? `同時 ${r.max_active ?? 5} 件`
+                  ? `同時 ${r.max_active ?? 5} 件 / ${r.valid_months ?? 1}ヶ月`
                   : "—",
             },
             {
@@ -287,6 +327,7 @@ export default function MenusScreen() {
                         id: r.id,
                         name: r.name,
                         billing_type: r.billing_type,
+                        priority: String(r.priority ?? 2),
                         duration_min: r.duration_min ?? "",
                         price: String(r.price ?? 0),
                         max_active: r.max_active ?? "",

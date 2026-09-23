@@ -70,13 +70,14 @@ export default function ReservationsScreen() {
   async function settle(id) {
     setBanner(null);
     setSettling(id);
-    const { error } = await reservationApi.settlePurchase({ reservationId: id });
+    const { data, error } = await reservationApi.settlePurchase({ reservationId: id });
     setSettling(null);
     if (error) {
       setBanner(error);
       return;
     }
-    flash("店舗での購入として処理しました");
+    // 何をしたかは RPC が文章で返す。受付で会員に伝えられるよう、そのまま出す。
+    flash(data || "店舗での購入として処理しました");
     load();
   }
 
@@ -314,7 +315,7 @@ export default function ReservationsScreen() {
         会員名を押すと会員詳細へ移動します。
         <br />
         「要購入」は未購入のメニューで入った予約です。店頭で代金を受け取ったら「購入を反映」を押してください。
-        回数券の場合は、先に会員詳細で回数券を付与してから押すと1回分が消費されます。
+        回数券や通い放題は、メニューに登録した回数・期間どおりに権利を作ってから消費します(事前の付与は不要です)。
         <br />
         担当の「変更」で、その時間に空いている別のトレーナーへ付け替えられます。
         「指名」の予約は会員が指名券を使って相手を選んでいるため、付け替えられません。

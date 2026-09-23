@@ -98,17 +98,17 @@ export default function MemberDetailScreen() {
   }
 
   // 未購入のまま入った予約を、店舗での購入として処理する。
-  // 回数券のときは、先に下の「回数券・通い放題」で付与しておく必要がある。
+  // 回数券・通い放題は、メニューの登録内容どおりに権利を作ってから消費する。
   async function settle(id) {
     setBanner(null);
     setSettling(id);
-    const { error } = await reservationApi.settlePurchase({ reservationId: id });
+    const { data, error } = await reservationApi.settlePurchase({ reservationId: id });
     setSettling(null);
     if (error) {
       setBanner(error);
       return;
     }
-    flash("店舗での購入として処理しました");
+    flash(data || "店舗での購入として処理しました");
     load();
   }
 

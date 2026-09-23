@@ -11,9 +11,15 @@ export const menuApi = {
     return apiCall(() => supabase.rpc("list_my_menus"));
   },
 
+  // 優先度(1=高 2=中 3=低)の高い順。同じ優先度は登録順。
   list({ storeId }) {
     return apiCall(() =>
-      supabase.from("menus").select("*").eq("store_id", storeId).order("created_at")
+      supabase
+        .from("menus")
+        .select("*")
+        .eq("store_id", storeId)
+        .order("priority")
+        .order("created_at")
     );
   },
   create(menu) {

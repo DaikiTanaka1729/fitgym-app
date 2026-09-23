@@ -70,8 +70,11 @@ export const reservationApi = {
     return apiCall(() => supabase.rpc("cancel_reservation", { p_reservation_id: reservationId }));
   },
 
-  // 店舗での購入を反映する(管理者)。
-  // 回数券なら1回消費し、時間課金なら購入登録を作り、「要購入」の印を外す。
+  // 店舗での購入を反映する(管理者)。「要購入」の印を外す。
+  //   時間課金 … 購入登録を作る
+  //   回数券   … 使える券があれば1回消費。無ければメニューの回数ぶん発行して消費
+  //   通い放題 … 契約が無ければメニューの期間ぶんの契約を作る
+  // 何をしたかを文章で返すので、画面にそのまま出せばよい。
   settlePurchase({ reservationId }) {
     return apiCall(() =>
       supabase.rpc("settle_reservation_purchase", { p_reservation_id: reservationId })
