@@ -12,6 +12,7 @@ const NAV = [
   { to: "/admin/shifts", label: "受付枠" },
   { to: "/admin/timetable", label: "タイムテーブル" },
   { to: "/admin/menus", label: "メニュー" },
+  { to: "/admin/sales", label: "売上" },
   { to: "/admin/trainers", label: "トレーナー" },
   { to: "/admin/surveys", label: "アンケート" },
 ];

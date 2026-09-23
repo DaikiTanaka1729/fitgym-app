@@ -24,6 +24,7 @@ import {
   MembersScreen,
   MenusScreen,
   ReservationsScreen,
+  SalesScreen,
   ShiftsScreen,
   SurveysScreen,
   TimetableScreen,
@@ -71,6 +72,7 @@ export default function App() {
           <Route path="/admin/members/:memberId" element={<RequireAdmin><MemberDetailScreen /></RequireAdmin>} />
           <Route path="/admin/reservations" element={<RequireAdmin><ReservationsScreen /></RequireAdmin>} />
           <Route path="/admin/menus" element={<RequireAdmin><MenusScreen /></RequireAdmin>} />
+          <Route path="/admin/sales" element={<RequireAdmin><SalesScreen /></RequireAdmin>} />
           <Route path="/admin/shifts" element={<RequireAdmin><ShiftsScreen /></RequireAdmin>} />
           <Route path="/admin/timetable" element={<RequireAdmin><TimetableScreen /></RequireAdmin>} />
           <Route path="/admin/trainers" element={<RequireAdmin><TrainersScreen /></RequireAdmin>} />
