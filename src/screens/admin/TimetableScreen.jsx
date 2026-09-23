@@ -21,6 +21,10 @@ const iso = (date, h, m) =>
 // 「トレーナー別に枠を作る」画面の裏返し。24時間の各枠に誰を配置するかで見る。
 export default function TimetableScreen() {
   const { admin } = useSession();
+  // 店舗管理者は全員分、トレーナーは自分の列だけ操作できる。
+  // サーバー側でも同じ判定をしているので、ここは見せ方の調整。
+  const isStoreAdmin = admin?.role === "admin";
+  const canEdit = (staffId) => isStoreAdmin || staffId === admin?.id;
   const dates = nextDates(14);
 
   const [date, setDate] = useState(dates[0].value);
@@ -78,6 +82,10 @@ export default function TimetableScreen() {
   const cellOf = (staffId, label) => index.get(`${staffId}:${label}`);
 
   async function onCell(staffId, s) {
+    if (!canEdit(staffId)) {
+      setBanner("自分の受付枠のみ操作できます");
+      return;
+    }
     const cur = cellOf(staffId, s.label);
     const key = `${staffId}:${s.label}`;
     setBanner(null);
@@ -110,6 +118,10 @@ export default function TimetableScreen() {
 
   // 列(トレーナー)の終日操作
   async function allDay(staffId, assign) {
+    if (!canEdit(staffId)) {
+      setBanner("自分の受付枠のみ操作できます");
+      return;
+    }
     setBanner(null);
     setBusy(`col:${staffId}`);
     let n = 0;
@@ -257,8 +269,8 @@ export default function TimetableScreen() {
                   <th key={st.id} style={{ ...headCell, zIndex: 2 }}>
                     <div>{st.name}</div>
                     <div style={{ display: "flex", gap: 4, justifyContent: "center", marginTop: 4 }}>
-                      <MiniBtn onClick={() => allDay(st.id, true)} disabled={busy === `col:${st.id}`}>終日配置</MiniBtn>
-                      <MiniBtn onClick={() => allDay(st.id, false)} disabled={busy === `col:${st.id}`}>解除</MiniBtn>
+                      <MiniBtn onClick={() => allDay(st.id, true)} disabled={!canEdit(st.id) || busy === `col:${st.id}`}>終日配置</MiniBtn>
+                      <MiniBtn onClick={() => allDay(st.id, false)} disabled={!canEdit(st.id) || busy === `col:${st.id}`}>解除</MiniBtn>
                     </div>
                   </th>
                 ))}
@@ -293,9 +305,17 @@ export default function TimetableScreen() {
                       <td key={st.id} style={{ borderTop: `1px solid ${T.borderFaint}`, padding: 3, textAlign: "center" }}>
                         <button
                           onClick={() => onCell(st.id, s)}
-                          disabled={busy === key || busy === `col:${st.id}`}
-                          title={c ? (c.is_closed ? "クローズ中" : `定員${c.capacity} / 予約${c.booked}`) : "未配置"}
-                          style={cellStyle(c)}
+                          disabled={!canEdit(st.id) || busy === key || busy === `col:${st.id}`}
+                          title={
+                            !canEdit(st.id)
+                              ? "自分の受付枠のみ操作できます"
+                              : c
+                              ? c.is_closed
+                                ? "クローズ中"
+                                : `定員${c.capacity} / 予約${c.booked}`
+                              : "未配置"
+                          }
+                          style={{ ...cellStyle(c), opacity: canEdit(st.id) ? 1 : 0.45 }}
                         >
                           {c ? (c.is_closed ? "休" : c.booked > 0 ? `${c.booked}/${c.capacity}` : "○") : ""}
                         </button>

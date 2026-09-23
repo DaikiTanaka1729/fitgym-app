@@ -38,6 +38,7 @@ const ERROR_MESSAGES = {
   not_authenticated: "ログインが必要です",
   forbidden: "この操作を行う権限がありません",
   slot_in_use: "予約が入っているため、この枠は外せません",
+  not_own_shift: "自分の受付枠のみ操作できます(すべての受付枠を操作できるのは店舗管理者のみです)",
   invalid_action: "操作の種類が正しくありません",
   invalid_range: "期間または時間帯の指定が正しくありません",
   approval_required: "メニューを公開するには承認権限が必要です",

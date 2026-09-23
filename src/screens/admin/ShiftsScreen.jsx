@@ -33,6 +33,10 @@ const WEEKDAYS = [
 // 「その時間に誰がいるか」を登録する。これが無いと予約可能な時刻が1つも出ない。
 export default function ShiftsScreen() {
   const { admin } = useSession();
+  // 店舗管理者は全員分、トレーナーは自分の分だけを操作できる。
+  // サーバー側でも同じ判定をしているので、ここは見せ方の調整。
+  const isStoreAdmin = admin?.role === "admin";
+  const canEdit = (staffId) => isStoreAdmin || staffId === admin?.id;
   const dates = nextDates(14);
 
   const [staff, setStaff] = useState([]);
@@ -42,7 +46,7 @@ export default function ShiftsScreen() {
   // 一括操作フォーム
   const [form, setForm] = useState({
     action: "create",
-    adminId: "",            // "" は全トレーナー
+    adminId: "",            // "" は全トレーナー(店舗管理者のみ)
     from: dates[0].value,
     to: dates[6].value,
     start: "09:00",
@@ -73,6 +77,13 @@ export default function ShiftsScreen() {
     if (error) setBanner(error);
     setSlots(data || []);
   }, [admin, date]);
+
+  // トレーナーとして入っている場合、対象は自分に固定する
+  useEffect(() => {
+    if (admin && !isStoreAdmin) {
+      setForm((f) => (f.adminId === admin.id ? f : { ...f, adminId: admin.id }));
+    }
+  }, [admin, isStoreAdmin]);
 
   useEffect(() => {
     loadSlots();
@@ -163,7 +174,11 @@ export default function ShiftsScreen() {
             <Select
               value={form.adminId}
               onChange={(v) => setForm({ ...form, adminId: v })}
-              options={[{ value: "", label: "全トレーナー" }, ...staff.map((s) => ({ value: s.id, label: s.name }))]}
+              options={
+                isStoreAdmin
+                  ? [{ value: "", label: "全トレーナー" }, ...staff.map((s) => ({ value: s.id, label: s.name }))]
+                  : staff.filter((s) => s.id === admin?.id).map((s) => ({ value: s.id, label: s.name }))
+              }
             />
           </Field>
           <Field label="開始日">
@@ -339,9 +354,12 @@ export default function ShiftsScreen() {
             >
               {g.rows.map((s) => {
                 const on = selected.has(s.id);
+                const mine = canEdit(s.staff_id);
                 return (
                   <button
                     key={s.id}
+                    disabled={!mine}
+                    title={mine ? "" : "自分の受付枠のみ操作できます"}
                     onClick={() => {
                       const next = new Set(selected);
                       on ? next.delete(s.id) : next.add(s.id);
@@ -355,7 +373,8 @@ export default function ShiftsScreen() {
                       padding: "6px 2px",
                       fontSize: 11.5,
                       fontFamily: font,
-                      cursor: "pointer",
+                      cursor: mine ? "pointer" : "default",
+                      opacity: mine ? 1 : 0.45,
                       lineHeight: 1.3,
                     }}
                   >
