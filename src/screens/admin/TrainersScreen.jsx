@@ -30,7 +30,9 @@ export default function TrainersScreen() {
     ]);
     if (s.error || m.error || l.error) setBanner(s.error || m.error || l.error);
     setStaff(s.data || []);
-    setMenus(m.data || []);
+    // 指名券は「担当する」ものではないので、この表には出さない。
+    // 停止中のメニューも担当の設定対象から外す。
+    setMenus((m.data || []).filter((x) => x.billing_type !== "nomination" && x.is_active));
     setLinks(new Set((l.data || []).map((x) => `${x.admin_id}:${x.menu_id}`)));
   }, [admin]);
 
