@@ -45,18 +45,6 @@ export const menuApi = {
     );
   },
 
-  // メニューの削除。店舗管理者のみ。
-  // 予約・回数券・通い放題から使われている場合は消せない(menu_in_use)。
-  // 担当の紐づけ・購入登録・指名券の適用は一緒に消える。
-  remove({ menuId }) {
-    return apiCall(() => supabase.rpc("delete_menu", { p_menu_id: menuId }));
-  },
-
-  // 削除できるかを先に見る。返り値: [{ reservations, tickets, memberships, deletable }]
-  usage({ menuId }) {
-    return apiCall(() => supabase.rpc("menu_usage", { p_menu_id: menuId }));
-  },
-
   // 公開 / 公開停止。承認権限を持つ管理者のみ実行できる。
   setPublished({ menuId, published }) {
     return apiCall(() =>

@@ -35,15 +35,12 @@ const EMPTY = {
 export default function MenusScreen() {
   const { admin } = useSession();
   const canApprove = admin?.can_approve_menus === true;
-  const isStoreAdmin = admin?.role === "admin";
   const [rows, setRows] = useState(null);
   const [publishing, setPublishing] = useState(null);
   const [form, setForm] = useState(null);
   const [banner, setBanner] = useState(null);
   const [toast, setToast] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(null);   // { id, name, usage }
-  const [removing, setRemoving] = useState(false);
 
   async function load() {
     if (!admin) return;
@@ -59,33 +56,6 @@ export default function MenusScreen() {
   function flash(m) {
     setToast(m);
     setTimeout(() => setToast(null), 2500);
-  }
-
-  // 削除の前に、使われているかを見てから確認を出す。
-  // 消せないものに確認を出しても意味がないため。
-  async function askDelete(r) {
-    setBanner(null);
-    const { data, error } = await menuApi.usage({ menuId: r.id });
-    if (error) {
-      setBanner(error);
-      return;
-    }
-    setConfirmDelete({ id: r.id, name: r.name, usage: data?.[0] || null });
-  }
-
-  async function doDelete() {
-    setBanner(null);
-    setRemoving(true);
-    const { error } = await menuApi.remove({ menuId: confirmDelete.id });
-    setRemoving(false);
-    if (error) {
-      setBanner(error);
-      setConfirmDelete(null);
-      return;
-    }
-    flash(`${confirmDelete.name} を削除しました`);
-    setConfirmDelete(null);
-    load();
   }
 
   const set = (k) => (v) => setForm({ ...form, [k]: v });
@@ -413,82 +383,12 @@ export default function MenusScreen() {
                       <span style={{ color: T.textFaint }}>承認待ち</span>
                     )
                   )}
-                  {isStoreAdmin && (
-                    <span
-                      onClick={() => askDelete(r)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => e.key === "Enter" && askDelete(r)}
-                      style={{ color: T.dangerDark, cursor: "pointer" }}
-                    >
-                      削除
-                    </span>
-                  )}
                 </span>
               ),
             },
           ]}
           rows={rows}
         />
-      )}
-
-      {confirmDelete && (
-        <div
-          onClick={() => !removing && setConfirmDelete(null)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(20,22,28,0.45)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 60,
-            padding: 20,
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: T.bg,
-              borderRadius: radius.lg,
-              padding: "20px 22px",
-              maxWidth: 440,
-              width: "100%",
-            }}
-          >
-            <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 10 }}>
-              「{confirmDelete.name}」を削除します
-            </div>
-
-            {confirmDelete.usage && !confirmDelete.usage.deletable ? (
-              <div style={{ fontSize: 12, color: T.dangerDark, lineHeight: 1.9 }}>
-                このメニューは使われているため削除できません。
-                <br />
-                予約 {confirmDelete.usage.reservations} 件 / 回数券{" "}
-                {confirmDelete.usage.tickets} 件 / 通い放題 {confirmDelete.usage.memberships} 件
-                <br />
-                記録を残したまま会員に出さないようにするには、編集画面で「有効」のチェックを外してください。
-              </div>
-            ) : (
-              <div style={{ fontSize: 12, color: T.textMute, lineHeight: 1.9 }}>
-                元に戻せません。
-                <br />
-                トレーナーの担当設定・会員の購入登録・指名券の適用設定も一緒に消えます。
-              </div>
-            )}
-
-            <div style={{ display: "flex", gap: 8, marginTop: 18 }}>
-              {confirmDelete.usage?.deletable !== false && (
-                <Button variant="navy" onClick={doDelete} loading={removing}>
-                  削除する
-                </Button>
-              )}
-              <Button variant="ghost" onClick={() => setConfirmDelete(null)} disabled={removing}>
-                {confirmDelete.usage?.deletable === false ? "閉じる" : "やめる"}
-              </Button>
-            </div>
-          </div>
-        </div>
       )}
 
       {rows && <NominationLinksSection menus={rows} onFlash={flash} />}
