@@ -24,6 +24,7 @@ const ERROR_MESSAGES = {
   reservation_limit: "予約の保有上限に達しています",
   duplicate_reservation: "同じ時間帯に既に予約があります",
   menu_not_found: "選択したメニューは現在ご利用いただけません",
+  menu_in_use: "予約・回数券・通い放題で使われているため削除できません。停止中にしてご利用ください",
   not_purchased: "このメニューは店舗でのお申し込みが必要です",
   menu_not_bookable: "このメニューは直接予約できません",
   nomination_required: "指名するには指名券が必要です",
