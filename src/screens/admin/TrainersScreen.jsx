@@ -232,7 +232,15 @@ export default function TrainersScreen() {
 
       {staff && staff.length > 0 && (
         <div style={{ overflowX: "auto" }}>
-          <table style={{ borderCollapse: "collapse", minWidth: 520, width: "100%", fontSize: 13 }}>
+          <table
+            style={{
+              borderCollapse: "collapse",
+              tableLayout: "fixed",
+              minWidth: NAME_W + (menus.length + 1) * MENU_W,
+              width: "100%",
+              fontSize: 13,
+            }}
+          >
             <thead>
               <tr>
                 <th style={th({ left: true })}>トレーナー</th>
@@ -257,8 +265,8 @@ export default function TrainersScreen() {
                 <tr key={s.id} style={{ background: i % 2 ? T.bgSubtle : T.bg }}>
                   <td style={td({ left: true })}>
                     <div style={{ fontWeight: 500 }}>{s.name}</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
-                      <span style={{ fontSize: 10.5, color: T.textFaint }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 10.5, color: T.textFaint, whiteSpace: "nowrap" }}>
                         {s.role === "admin" ? "店舗管理者" : "スタッフ"}
                       </span>
                       {s.status === "pending" && <Badge tone="amber">承認待ち</Badge>}
@@ -402,6 +410,11 @@ export default function TrainersScreen() {
   );
 }
 
+// 列の幅。左端(トレーナー)には承認や編集の操作が入るので広く取る。
+// 最小幅を決めないと、狭い画面で1文字ずつ折り返して潰れてしまう。
+const NAME_W = 210;
+const MENU_W = 116;
+
 const th = ({ left } = {}) => ({
   background: T.navy,
   color: T.onDark,
@@ -409,13 +422,17 @@ const th = ({ left } = {}) => ({
   fontWeight: 500,
   padding: "9px 12px",
   textAlign: left ? "left" : "center",
-  whiteSpace: "nowrap",
+  whiteSpace: left ? "nowrap" : "normal",
+  minWidth: left ? NAME_W : MENU_W,
+  width: left ? NAME_W : MENU_W,
 });
 
 const td = ({ left } = {}) => ({
   padding: "8px 12px",
   textAlign: left ? "left" : "center",
   borderTop: `1px solid ${T.borderFaint}`,
+  minWidth: left ? NAME_W : MENU_W,
+  width: left ? NAME_W : MENU_W,
 });
 
 function Empty({ children }) {
