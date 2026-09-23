@@ -109,7 +109,9 @@ export default function MenusScreen() {
         form.billing_type === "unlimited" || form.billing_type === "nomination"
           ? null
           : num(form.duration_min),
-      max_active: form.billing_type === "unlimited" ? num(form.max_active) : null,
+      // 同時予約の上限は課金形態によらず効く(create_reservation が見ている)。
+      // 指名券は予約できないので持たせない。
+      max_active: form.billing_type === "nomination" ? null : num(form.max_active),
       ticket_count:
         form.billing_type === "ticket" || form.billing_type === "nomination"
           ? num(form.ticket_count)
@@ -210,6 +212,12 @@ export default function MenusScreen() {
               <>
                 <TextField label="所要時間(分)" value={form.duration_min} onChange={set("duration_min")} placeholder="60" />
                 <TextField label="価格(税込・円)" value={form.price} onChange={set("price")} placeholder="8000" />
+                <TextField
+                  label="同時予約の上限(件)"
+                  value={form.max_active}
+                  onChange={set("max_active")}
+                  placeholder="未入力なら 5 件"
+                />
               </>
             )}
 
@@ -237,6 +245,12 @@ export default function MenusScreen() {
                 <TextField label="回数" value={form.ticket_count} onChange={set("ticket_count")} placeholder="10" />
                 <TextField label="有効期限(購入からの月数)" value={form.valid_months} onChange={set("valid_months")} placeholder="6" />
                 <TextField label="価格(税込・円)" value={form.price} onChange={set("price")} placeholder="70000" />
+                <TextField
+                  label="同時予約の上限(件)"
+                  value={form.max_active}
+                  onChange={set("max_active")}
+                  placeholder="未入力なら 5 件"
+                />
               </>
             )}
 
@@ -251,6 +265,13 @@ export default function MenusScreen() {
                   「適用メニュー」から指定してください。
                 </div>
               </>
+            )}
+
+            {form.billing_type !== "nomination" && (
+              <div style={{ fontSize: 11, color: T.textMute, lineHeight: 1.7, margin: "-4px 0 14px" }}>
+                同時予約の上限は「その会員がこれから先に持てる予約の合計件数」です。
+                メニューごとに違う値を入れた場合、そのとき予約するメニューの値で判定します。
+              </div>
             )}
 
             <div
@@ -328,11 +349,13 @@ export default function MenusScreen() {
               label: "回数・上限",
               w: "0.9fr",
               render: (v, r) =>
-                r.billing_type === "ticket" || r.billing_type === "nomination"
+                r.billing_type === "nomination"
                   ? `${v ?? "—"}回 / ${r.valid_months ? `${r.valid_months}ヶ月` : "無期限"}`
+                  : r.billing_type === "ticket"
+                  ? `${v ?? "—"}回 / ${r.valid_months ? `${r.valid_months}ヶ月` : "無期限"} / 同時 ${r.max_active ?? 5} 件`
                   : r.billing_type === "unlimited"
                   ? `同時 ${r.max_active ?? 5} 件 / ${r.valid_months ?? 1}ヶ月`
-                  : "—",
+                  : `同時 ${r.max_active ?? 5} 件`,
             },
             {
               key: "status",
