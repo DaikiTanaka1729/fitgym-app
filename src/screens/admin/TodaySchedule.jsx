@@ -349,7 +349,9 @@ function nowPercent() {
 function cellColor(state) {
   if (state === "booked") return T.primary;
   if (state === "open") return T.primarySoft;
-  if (state === "closed") return T.dangerSoft;
+  // クローズは濃いグレー。赤は不具合や警告に使う色なので、
+  // 「店舗が意図して閉じた枠」とは区別する。
+  if (state === "closed") return T.grayDark;
   return T.bg;
 }
 
