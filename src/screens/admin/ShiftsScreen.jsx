@@ -366,9 +366,11 @@ export default function ShiftsScreen() {
                       setSelected(next);
                     }}
                     style={{
-                      border: `1px solid ${on ? T.navy : s.is_closed ? T.dangerBorder : T.fieldBorder}`,
-                      background: on ? T.navySoft : s.is_closed ? T.dangerSoft : T.bg,
-                      color: s.is_closed ? T.dangerDark : T.text,
+                      border: `1px solid ${on ? T.navy : s.is_closed ? T.grayDark : T.fieldBorder}`,
+                      // クローズは濃いグレーで塗る。赤は不具合や警告に使う色なので、
+                      // 「店舗が意図して閉じた枠」とは区別する。
+                      background: on ? T.navySoft : s.is_closed ? T.grayDark : T.bg,
+                      color: s.is_closed ? T.onDark : T.text,
                       borderRadius: radius.md,
                       padding: "6px 2px",
                       fontSize: 11.5,
@@ -379,7 +381,7 @@ export default function ShiftsScreen() {
                     }}
                   >
                     {jstTime(s.start_at)}
-                    <div style={{ fontSize: 9, color: s.is_closed ? T.dangerDark : T.textFaint }}>
+                    <div style={{ fontSize: 9, color: s.is_closed ? T.onDark : T.textFaint, opacity: s.is_closed ? 0.8 : 1 }}>
                       {s.is_closed ? "休止" : `定員${s.capacity}`}
                     </div>
                   </button>

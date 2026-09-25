@@ -244,7 +244,7 @@ export default function TimetableScreen() {
         <Legend bg={T.bg} border={T.fieldBorder} label="未配置" />
         <Legend bg={T.primarySoft} border={T.primary} label="受付可" />
         <Legend bg={T.primary} border={T.primary} label="予約あり" solid />
-        <Legend bg={T.dangerSoft} border={T.danger} label="クローズ" />
+        <Legend bg={T.grayDark} border={T.grayDark} label="クローズ" />
       </div>
 
       {slots === null && (
@@ -385,7 +385,9 @@ function cellStyle(c) {
     lineHeight: 1,
   };
   if (!c) return { ...base, border: `1px solid ${T.fieldBorder}`, background: T.bg, color: T.textFaint };
-  if (c.is_closed) return { ...base, border: `1px solid ${T.danger}`, background: T.dangerSoft, color: T.dangerDark };
+  // クローズは濃いグレー。赤は不具合や警告に使う色なので、
+  // 「店舗が意図して閉じた枠」とは区別する。
+  if (c.is_closed) return { ...base, border: `1px solid ${T.grayDark}`, background: T.grayDark, color: T.onDark };
   if (c.booked > 0) return { ...base, border: `1px solid ${T.primary}`, background: T.primary, color: T.onDark, fontWeight: 500 };
   return { ...base, border: `1px solid ${T.primary}`, background: T.primarySoft, color: T.primaryDark };
 }
