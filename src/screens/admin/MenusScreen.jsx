@@ -9,7 +9,7 @@ import BookingCutoffSection, { cutoffLabel } from "./BookingCutoffSection";
 
 const TONE = { time: "primary", unlimited: "accent", ticket: "amber", nomination: "navy" };
 const STATUS = { draft: { label: "仮登録", tone: "gray" }, published: { label: "公開中", tone: "primary" } };
-const LABEL = { time: "時間課金", unlimited: "通い放題", ticket: "回数券", nomination: "指名券" };
+const LABEL = { time: "時間課金", unlimited: "通い放題", ticket: "回数券", nomination: "指名券・レンタル" };
 
 // 表示順。小さいほど上に出る。数で持つのは、並べ替えのたびに
 // 文字から順位へ読み替える処理を書かなくて済むようにするため。
@@ -188,7 +188,7 @@ export default function MenusScreen() {
                   { value: "time", label: "時間課金" },
                   { value: "unlimited", label: "通い放題" },
                   { value: "ticket", label: "回数券" },
-                  { value: "nomination", label: "指名券" },
+                  { value: "nomination", label: "指名券・レンタル" },
                 ]}
               />
             </div>

@@ -35,7 +35,18 @@ export const reservationApi = {
   //
   // staffId … 指名するときだけ指定する。指名券を1回消費する。
   //   指定しない場合は、その時刻に空いているトレーナーから無作為に選ぶ。
-  create({ menuId, startAt, memberId = null, allowUnpurchased = false, staffId = null }) {
+  //
+  // allowUnpaidNomination … 指名券を持たないまま指名することを認める。
+  //   会員が「店舗で購入します」に同意した場合だけ true にする。
+  //   その予約には「要購入」の印が付き、来店時に処理する。
+  create({
+    menuId,
+    startAt,
+    memberId = null,
+    allowUnpurchased = false,
+    staffId = null,
+    allowUnpaidNomination = false,
+  }) {
     return apiCall(() =>
       supabase.rpc("create_reservation", {
         p_menu_id: menuId,
@@ -43,6 +54,7 @@ export const reservationApi = {
         p_member_id: memberId,
         p_allow_unpurchased: allowUnpurchased,
         p_staff_id: staffId,
+        p_allow_unpaid_nomination: allowUnpaidNomination,
       })
     );
   },

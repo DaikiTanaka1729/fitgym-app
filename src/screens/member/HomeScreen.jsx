@@ -108,9 +108,10 @@ export default function HomeScreen() {
               {jstDate(r.start_at)} {jstTime(r.start_at)} 〜 {jstTime(r.end_at)}
               {r.trainer_name ? ` · 担当 ${r.trainer_name}` : ""}
             </div>
-            {r.needs_purchase && (
+            {(r.needs_purchase || r.nomination_needs_purchase) && (
               <div style={{ fontSize: 11, color: T.amberDark, marginTop: 4 }}>
                 ご来店時に店舗でのお支払いが必要です
+                {!r.needs_purchase && r.nomination_needs_purchase && "(指名分)"}
               </div>
             )}
             {r.cancelable && (

@@ -15,7 +15,7 @@ function monthsLater(months) {
 
 // 付与の種類と、対応するメニューの課金タイプ
 const KIND_TYPE = { ticket: "ticket", unlimited: "unlimited", nomination: "nomination" };
-const KIND_LABEL = { ticket: "回数券", unlimited: "通い放題", nomination: "指名券" };
+const KIND_LABEL = { ticket: "回数券", unlimited: "通い放題", nomination: "指名券・レンタル" };
 const KIND_TONE = { ticket: "amber", unlimited: "accent", nomination: "navy" };
 
 const yen = (v) => `¥${Number(v ?? 0).toLocaleString()}`;
@@ -193,7 +193,7 @@ export default function EntitlementSection({ memberId, onFlash }) {
               options={[
                 { value: "ticket", label: "回数券" },
                 { value: "unlimited", label: "通い放題" },
-                { value: "nomination", label: "指名券" },
+                { value: "nomination", label: "指名券・レンタル" },
               ]}
             />
           </div>

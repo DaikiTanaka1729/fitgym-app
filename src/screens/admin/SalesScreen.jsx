@@ -14,7 +14,7 @@ import { APP_SLUG } from "../../appConfig";
 // 締めの数字として使えなくなる。
 // ------------------------------------------------------------
 
-const KIND = { time: "時間課金", ticket: "回数券", unlimited: "通い放題", nomination: "指名券" };
+const KIND = { time: "時間課金", ticket: "回数券", unlimited: "通い放題", nomination: "指名券・レンタル" };
 const TONE = { time: "primary", ticket: "amber", unlimited: "accent", nomination: "navy" };
 const SOURCE = { grant: "会員詳細から", settle: "予約の購入を反映", backfill: "過去分の取り込み" };
 

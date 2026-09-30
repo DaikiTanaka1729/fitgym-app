@@ -27,7 +27,7 @@ export default function ReserveDoneScreen() {
   // 直接URLを開かれた場合はホームへ戻す
   if (!state?.menu || !state?.startAt) return <Navigate to="/home" replace />;
 
-  const { menu, startAt, needsPurchase, nominated } = state;
+  const { menu, startAt, needsPurchase, nominated, nominationNeedsPurchase } = state;
   const end = new Date(new Date(startAt).getTime() + menu.duration_min * 60000).toISOString();
 
   return (
@@ -49,10 +49,19 @@ export default function ReserveDoneScreen() {
         <Row label="所要時間" value={`${menu.duration_min}分`} />
         {menu.billing_type === "time" && <Row label="料金" value={`¥${menu.price.toLocaleString()}`} />}
         {menu.billing_type === "ticket" && !needsPurchase && note && <Row label="回数券" value={note} />}
-        {nominated && <Row label="指名" value="トレーナーを指名しました(指名券1回)" />}
+        {nominated && (
+          <Row
+            label="指名"
+            value={
+              nominationNeedsPurchase
+                ? "トレーナーを指名しました(店舗でのお支払いが必要)"
+                : "トレーナーを指名しました(指名券・レンタル1回)"
+            }
+          />
+        )}
       </div>
 
-      {needsPurchase && (
+      {(needsPurchase || nominationNeedsPurchase) && (
         <div
           style={{
             border: `1px solid ${T.amberDark}33`,
@@ -64,7 +73,11 @@ export default function ReserveDoneScreen() {
             marginTop: 12,
           }}
         >
-          このメニューは未購入のためお支払いが済んでいません。
+          {needsPurchase && nominationNeedsPurchase
+            ? "メニューと指名分のお支払いが済んでいません。"
+            : needsPurchase
+            ? "このメニューは未購入のためお支払いが済んでいません。"
+            : "指名分のお支払いが済んでいません。"}
           <br />
           ご来店時に受付でお手続きをお願いします。
         </div>

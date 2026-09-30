@@ -278,9 +278,10 @@ export default function ReservationsScreen() {
                     </td>
                     <td style={tdStyle}>
                       <Badge tone={TONE[r.source]}>{SOURCE[r.source]}</Badge>
-                      {r.needs_purchase && !cancelled && (
-                        <div style={{ marginTop: 4 }}>
-                          <Badge tone="danger">要購入</Badge>
+                      {(r.needs_purchase || r.nomination_needs_purchase) && !cancelled && (
+                        <div style={{ marginTop: 4, display: "flex", flexDirection: "column", gap: 3 }}>
+                          {r.needs_purchase && <Badge tone="danger">要購入</Badge>}
+                          {r.nomination_needs_purchase && <Badge tone="danger">指名 要購入</Badge>}
                         </div>
                       )}
                     </td>
@@ -290,7 +291,7 @@ export default function ReservationsScreen() {
                     <td style={{ ...tdStyle, whiteSpace: "nowrap" }}>
                       {!cancelled && (
                         <div style={{ display: "flex", gap: 6 }}>
-                          {r.needs_purchase && (
+                          {(r.needs_purchase || r.nomination_needs_purchase) && (
                             <Button variant="navy" onClick={() => settle(r.id)} loading={settling === r.id}>
                               購入を反映
                             </Button>
@@ -316,6 +317,8 @@ export default function ReservationsScreen() {
         <br />
         「要購入」は未購入のメニューで入った予約です。店頭で代金を受け取ったら「購入を反映」を押してください。
         回数券や通い放題は、メニューに登録した回数・期間どおりに権利を作ってから消費します(事前の付与は不要です)。
+        <br />
+        「指名 要購入」は、指名券・レンタルを持たないまま指名が入った予約です。同じボタンで処理できます。
         <br />
         担当の「変更」で、その時間に空いている別のトレーナーへ付け替えられます。
         「指名」の予約は会員が指名券を使って相手を選んでいるため、付け替えられません。

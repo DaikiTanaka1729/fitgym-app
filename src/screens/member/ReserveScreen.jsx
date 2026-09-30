@@ -57,6 +57,8 @@ export default function ReserveScreen() {
       startAt,
       allowUnpurchased: !menu.bookable,
       staffId,
+      // 指名券を持っていない場合は、店頭での購入に同意したうえで進む
+      allowUnpaidNomination: staffId !== null && !menu.nominatable,
     });
     setBooking(null);
     if (error) {
@@ -68,7 +70,13 @@ export default function ReserveScreen() {
       return;
     }
     navigate("/reserve/done", {
-      state: { menu, startAt, needsPurchase: !menu.bookable, nominated: staffId !== null },
+      state: {
+        menu,
+        startAt,
+        needsPurchase: !menu.bookable,
+        nominated: staffId !== null,
+        nominationNeedsPurchase: staffId !== null && !menu.nominatable,
+      },
     });
   }
 
@@ -205,14 +213,14 @@ export default function ReserveScreen() {
         </div>
       )}
 
-      {menu.nominatable && (
+      {menu.nomination_available && (
         <div
           onClick={() => setNominate(!nominate)}
           role="button"
           tabIndex={0}
           style={{
             display: "flex",
-            alignItems: "center",
+            alignItems: "flex-start",
             gap: 10,
             border: `1px solid ${nominate ? T.primary : T.fieldBorder}`,
             background: nominate ? T.primarySoft : T.bg,
@@ -226,13 +234,20 @@ export default function ReserveScreen() {
             type="checkbox"
             checked={nominate}
             onChange={() => setNominate(!nominate)}
-            style={{ width: 17, height: 17, accentColor: T.primary, cursor: "pointer" }}
+            style={{ width: 17, height: 17, accentColor: T.primary, cursor: "pointer", marginTop: 2 }}
           />
           <div>
             <div style={{ fontSize: 12.5, fontWeight: 500 }}>トレーナーを指名する</div>
-            <div style={{ fontSize: 11, color: T.textMute, marginTop: 2 }}>
-              指名券を1回使います(残り {menu.nomination_left} 回)
-            </div>
+            {menu.nominatable ? (
+              <div style={{ fontSize: 11, color: T.textMute, marginTop: 2 }}>
+                {menu.nomination_name || "指名券・レンタル"}を1回使います(残り {menu.nomination_left} 回)
+              </div>
+            ) : (
+              <div style={{ fontSize: 11, color: T.amberDark, marginTop: 2, lineHeight: 1.7 }}>
+                {menu.nomination_name || "指名券・レンタル"}をお持ちでないため、ご来店時に店舗でご購入いただきます
+                {menu.nomination_price != null && `(¥${Number(menu.nomination_price).toLocaleString()})`}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -409,7 +424,10 @@ export default function ReserveScreen() {
           >
             <div style={{ fontSize: 14, fontWeight: 500 }}>トレーナーを選んでください</div>
             <div style={{ fontSize: 11.5, color: T.textMute, marginTop: 4, marginBottom: 14 }}>
-              {jstTime(picking)} 開始 · 指名券を1回使います
+              {jstTime(picking)} 開始 ·{" "}
+              {menu.nominatable
+                ? `${menu.nomination_name || "指名券・レンタル"}を1回使います`
+                : "指名分のお支払いはご来店時に店舗で承ります"}
             </div>
 
             {trainers === null && (

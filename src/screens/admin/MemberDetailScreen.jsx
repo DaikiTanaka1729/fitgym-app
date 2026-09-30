@@ -235,7 +235,8 @@ export default function MemberDetailScreen() {
                   <Badge tone={TONE[r.source]}>{SOURCE[r.source]}</Badge>
                   {r.nominated && <Badge tone="navy">指名</Badge>}
                   {r.needs_purchase && <Badge tone="danger">要購入</Badge>}
-                  {r.needs_purchase && (
+                  {r.nomination_needs_purchase && <Badge tone="danger">指名 要購入</Badge>}
+                  {(r.needs_purchase || r.nomination_needs_purchase) && (
                     <Button variant="navy" onClick={() => settle(r.id)} loading={settling === r.id}>
                       購入を反映
                     </Button>
@@ -285,7 +286,7 @@ export default function MemberDetailScreen() {
                     <td style={cellStyle}>{r.trainer_name || "—"}</td>
                     <td style={cellStyle}>
                       <Badge tone={TONE[r.source]}>{SOURCE[r.source]}</Badge>
-                      {r.needs_purchase && r.status !== "cancelled" && (
+                      {(r.needs_purchase || r.nomination_needs_purchase) && r.status !== "cancelled" && (
                         <div style={{ marginTop: 4 }}>
                           <Badge tone="danger">要購入</Badge>
                         </div>
