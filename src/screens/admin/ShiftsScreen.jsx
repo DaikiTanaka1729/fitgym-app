@@ -18,7 +18,12 @@ import AdminLayout from "./AdminLayout";
 import StoreClosureSection from "./StoreClosureSection";
 import { jstTime } from "../member/format";
 
-const HOURS = Array.from({ length: 25 }, (_, i) => `${String(i).padStart(2, "0")}:00`);
+// 受付枠は30分刻みで持っている。開始・終了もその刻みで選べるようにする。
+// 00:00 から 24:00 まで49個(末尾の 24:00 は終了時刻専用)。
+const TIMES = Array.from(
+  { length: 49 },
+  (_, i) => `${String(Math.floor(i / 2)).padStart(2, "0")}:${i % 2 ? "30" : "00"}`
+);
 
 const ACTIONS = [
   { value: "create", label: "追加", done: "追加", variant: "navy",
@@ -225,11 +230,11 @@ export default function ShiftsScreen() {
           </Field>
           <Field label="開始時刻">
             <Select value={form.start} onChange={(v) => setForm({ ...form, start: v })}
-              options={HOURS.slice(0, 24).map((h) => ({ value: h, label: h }))} />
+              options={TIMES.slice(0, 48).map((h) => ({ value: h, label: h }))} />
           </Field>
           <Field label="終了時刻">
             <Select value={form.end} onChange={(v) => setForm({ ...form, end: v })}
-              options={HOURS.slice(1).map((h) => ({ value: h, label: h === "24:00" ? "24:00(終日)" : h }))} />
+              options={TIMES.slice(1).map((h) => ({ value: h, label: h === "24:00" ? "24:00(終日)" : h }))} />
           </Field>
           {form.action === "create" && (
             <Field label="1枠あたりの定員">
