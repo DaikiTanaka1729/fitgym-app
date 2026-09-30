@@ -5,6 +5,7 @@ import { menuApi } from "../../api";
 import { useSession } from "../../session";
 import AdminLayout from "./AdminLayout";
 import NominationLinksSection from "./NominationLinksSection";
+import BookingCutoffSection, { cutoffLabel } from "./BookingCutoffSection";
 
 const TONE = { time: "primary", unlimited: "accent", ticket: "amber", nomination: "navy" };
 const STATUS = { draft: { label: "仮登録", tone: "gray" }, published: { label: "公開中", tone: "primary" } };
@@ -23,6 +24,7 @@ const EMPTY = {
   name: "",
   billing_type: "time",
   priority: "2",
+  booking_cutoff_min: "",
   duration_min: "60",
   price: "0",
   max_active: "",
@@ -74,6 +76,8 @@ export default function MenusScreen() {
       name: form.name.trim(),
       billing_type: form.billing_type,
       priority: num(form.priority) ?? 2,
+      // 未入力なら店舗の設定を使う
+      booking_cutoff_min: form.billing_type === "nomination" ? null : num(form.booking_cutoff_min),
       price: num(form.price) ?? 0,
       is_active: form.is_active,
       // 指名券は施術ではないので所要時間を持たない。回数と期限は回数券と同じ扱い。
@@ -165,6 +169,15 @@ export default function MenusScreen() {
             <div style={{ fontSize: 11, color: T.textMute, lineHeight: 1.7, marginBottom: 14 }}>
               高いものから上に並びます。会員の予約画面と、会員詳細の購入登録に効きます。
             </div>
+
+            {form.billing_type !== "nomination" && (
+              <TextField
+                label="直前予約の締切(分)"
+                value={form.booking_cutoff_min}
+                onChange={set("booking_cutoff_min")}
+                placeholder="未入力なら店舗の設定を使う"
+              />
+            )}
 
             <div style={{ fontSize: 11, color: T.textMute, fontWeight: 500, marginBottom: 6 }}>課金タイプ</div>
             <div style={{ marginBottom: 14 }}>
@@ -330,6 +343,13 @@ export default function MenusScreen() {
                   : `同時 ${r.max_active ?? 5} 件`,
             },
             {
+              key: "booking_cutoff_min",
+              label: "予約の締切",
+              w: "0.8fr",
+              render: (v, r) =>
+                r.billing_type === "nomination" ? "—" : v == null ? "店舗の設定" : cutoffLabel(v),
+            },
+            {
               key: "status",
               label: "公開状態",
               w: "0.7fr",
@@ -353,6 +373,7 @@ export default function MenusScreen() {
                         name: r.name,
                         billing_type: r.billing_type,
                         priority: String(r.priority ?? 2),
+                        booking_cutoff_min: r.booking_cutoff_min ?? "",
                         duration_min: r.duration_min ?? "",
                         price: String(r.price ?? 0),
                         max_active: r.max_active ?? "",
@@ -394,6 +415,8 @@ export default function MenusScreen() {
       )}
 
       {rows && <NominationLinksSection menus={rows} onFlash={flash} />}
+
+      <BookingCutoffSection onFlash={flash} />
     </AdminLayout>
   );
 }

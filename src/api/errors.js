@@ -17,6 +17,8 @@ const ERROR_MESSAGES = {
   slot_full: "選択した時間帯は満席です",
   slot_closed: "選択した時間帯は予約を受け付けていません",
   slot_past: "過ぎた時間帯は予約できません",
+  too_close: "この時間は予約の受付を終了しました。お電話でご相談ください",
+  invalid_cutoff: "締切の分数が正しくありません",
   slot_not_found: "選択した時間帯が見つかりません",
   ticket_exhausted: "回数券の残回数がありません",
   ticket_expired: "回数券の有効期限が切れています",

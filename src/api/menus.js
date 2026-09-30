@@ -29,6 +29,16 @@ export const menuApi = {
     return apiCall(() => supabase.from("menus").update(patch).eq("id", id).select().single());
   },
 
+  // 店舗の設定。返り値: [{ id, name, booking_cutoff_min }]
+  getStoreSettings() {
+    return apiCall(() => supabase.rpc("get_store_settings"));
+  },
+
+  // 直前予約の締切(分)。店舗管理者のみ変更できる。
+  setBookingCutoff({ minutes }) {
+    return apiCall(() => supabase.rpc("set_booking_cutoff", { p_min: minutes }));
+  },
+
   // 指名券がどのメニューに使えるかの紐づけ
   // 返り値: [{ nomination_menu_id, menu_id }]
   listNominationLinks() {
