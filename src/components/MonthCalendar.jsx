@@ -87,6 +87,9 @@ export default function MonthCalendar({
   const canPrev = cursor > limitFrom;
   const canNext = monthStart(cursor, shown) <= limitTo;
 
+  // 開始日だけを押した状態か(range のみ)
+  const [half, setHalf] = useState(false);
+
   const selected = useMemo(() => {
     if (mode === "multi") return new Set(value || []);
     return null;
@@ -104,9 +107,18 @@ export default function MonthCalendar({
       return;
     }
     // range: 1回目で開始、2回目で終了。開始より前を押したら選び直し。
-    const { from, to } = value || {};
-    if (!from || to || iso < from) onChange?.({ from: iso, to: null });
-    else onChange?.({ from, to: iso });
+    //
+    // 「1回目を押した直後かどうか」は自分で覚える。
+    // 呼び出し側が to を必ず埋めて持つ作りだと、value.to で判定すると
+    // 常に1回目の扱いになり、範囲が広がらない。
+    const { from } = value || {};
+    if (!half || !from || iso < from) {
+      setHalf(true);
+      onChange?.({ from: iso, to: null });
+    } else {
+      setHalf(false);
+      onChange?.({ from, to: iso });
+    }
   }
 
   function stateOf(iso) {
@@ -128,6 +140,63 @@ export default function MonthCalendar({
         </div>
         <Nav dir="next" disabled={!canNext} onClick={() => setCursor(monthStart(cursor, 1))} />
       </div>
+
+      {mode === "range" && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            marginBottom: 8,
+            fontSize: 11.5,
+            color: T.textMute,
+          }}
+        >
+          <span
+            style={{
+              padding: "3px 8px",
+              borderRadius: radius.sm,
+              background: half || !value?.to ? T.navy : T.navySoft,
+              color: half || !value?.to ? T.onDark : T.navy,
+              fontWeight: 500,
+            }}
+          >
+            {value?.from ? dayLabel(value.from) : "開始日"}
+          </span>
+          <span>→</span>
+          <span
+            style={{
+              padding: "3px 8px",
+              borderRadius: radius.sm,
+              background: half || !value?.to ? T.navySoft : T.navy,
+              color: half || !value?.to ? T.navy : T.onDark,
+              fontWeight: 500,
+            }}
+          >
+            {half || !value?.to ? "終了日を選ぶ" : dayLabel(value.to)}
+          </span>
+          {(half || value?.from) && (
+            <button
+              type="button"
+              onClick={() => {
+                setHalf(false);
+                onChange?.({ from: null, to: null });
+              }}
+              style={{
+                border: "none",
+                background: "none",
+                color: T.accent,
+                fontSize: 11,
+                fontFamily: font,
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
+              選び直す
+            </button>
+          )}
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         {Array.from({ length: shown }, (_, i) => {
@@ -155,7 +224,7 @@ export default function MonthCalendar({
                   <Cell
                     key={c.iso}
                     cell={c}
-                    state={stateOf(c.iso)}
+                    state={c.inMonth ? stateOf(c.iso) : null}
                     mark={marks?.[c.iso]}
                     today={c.iso === todayISO()}
                     disabled={

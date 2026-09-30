@@ -252,7 +252,9 @@ export default function ShiftsScreen() {
             <MonthCalendar
               mode="range"
               value={{ from: form.from, to: form.to }}
-              onChange={({ from, to }) => setForm({ ...form, from, to: to || from })}
+              onChange={({ from, to }) =>
+                setForm({ ...form, from: from || today, to: to || from || today })
+              }
               min={today}
               max={lastDay}
               marks={closedMarks}
