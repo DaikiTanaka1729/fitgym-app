@@ -55,6 +55,7 @@ const ERROR_MESSAGES = {
   already_registered: "このアカウントは既に管理者として登録されています",
   member_account: "会員として登録済みのメールアドレスでは管理者登録できません",
   store_not_found: "店舗が登録されていません",
+  store_closed: "選択された日は休館日のため予約できません",
   // 汎用
   network: "通信エラーが発生しました。接続をご確認ください",
   unknown: "エラーが発生しました。時間をおいて再度お試しください",

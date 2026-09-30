@@ -8,6 +8,7 @@ export { default as LockedState } from "./LockedState";
 export { default as Badge } from "./Badge";
 export { default as DataTable } from "./DataTable";
 export { default as useNarrow } from "./useNarrow";
+export { default as MonthCalendar, todayISO, addDays, dayLabel } from "./MonthCalendar";
 export { default as Toast } from "./Toast";
 export { default as Banner } from "./Banner";
 export { default as Spinner } from "./Spinner";

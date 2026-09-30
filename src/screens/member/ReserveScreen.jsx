@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { T, font, radius } from "../../theme/tokens";
 import { Button, Banner, Badge, Spinner } from "../../components";
-import { menuApi, reservationApi } from "../../api";
+import { menuApi, reservationApi, shiftApi } from "../../api";
 import MemberLayout from "./MemberLayout";
 import { BANDS, bandOfNow, jstHour, jstTime, nextDates } from "./format";
 
@@ -32,12 +32,18 @@ export default function ReserveScreen() {
   const [nominate, setNominate] = useState(false);
   const [picking, setPicking] = useState(null);     // 指名するトレーナーを選ぶ時刻
   const [trainers, setTrainers] = useState(null);
+  // 休館日。選べない理由をはっきり見せるため、空きが無い日とは別に扱う。
+  const [closed, setClosed] = useState(new Set());
 
   useEffect(() => {
     menuApi.listMine().then(({ data, error }) => {
       if (error) setBanner(error);
       setMenus(data || []);
     });
+    shiftApi
+      .listClosedDays({ from: dates[0].value, to: dates[dates.length - 1].value })
+      .then(({ data }) => setClosed(new Set((data || []).map((d) => d.day))));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -256,26 +262,32 @@ export default function ReserveScreen() {
       <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 6, marginBottom: 16 }}>
         {dates.map((d) => {
           const on = d.value === date;
+          const off = closed.has(d.value);
           return (
             <div
               key={d.value}
-              onClick={() => setDate(d.value)}
+              onClick={() => !off && setDate(d.value)}
               role="button"
-              tabIndex={0}
+              tabIndex={off ? -1 : 0}
+              aria-disabled={off}
+              title={off ? "休館日" : ""}
               style={{
                 flex: "0 0 auto",
-                border: `1px solid ${on ? T.primary : T.fieldBorder}`,
-                background: on ? T.primarySoft : T.bg,
-                color: on ? T.primaryDark : T.textMute,
-                fontWeight: on ? 500 : 400,
+                border: `1px solid ${off ? T.fieldBorder : on ? T.primary : T.fieldBorder}`,
+                background: off ? T.graySoft : on ? T.primarySoft : T.bg,
+                color: off ? T.textFaint : on ? T.primaryDark : T.textMute,
+                fontWeight: on && !off ? 500 : 400,
                 borderRadius: radius.md,
                 padding: "7px 11px",
                 fontSize: 11.5,
-                cursor: "pointer",
+                cursor: off ? "default" : "pointer",
                 whiteSpace: "nowrap",
+                textAlign: "center",
+                lineHeight: 1.35,
               }}
             >
               {d.isToday ? "今日" : d.label}
+              {off && <div style={{ fontSize: 9.5 }}>休館</div>}
             </div>
           );
         })}

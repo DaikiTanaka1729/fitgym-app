@@ -1,10 +1,22 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { T, font, radius } from "../../theme/tokens";
-import { Banner, Button, Segmented, Spinner, TextField, Toast } from "../../components";
+import {
+  Banner,
+  Button,
+  MonthCalendar,
+  Segmented,
+  Spinner,
+  TextField,
+  Toast,
+  addDays,
+  dayLabel,
+  todayISO,
+} from "../../components";
 import { shiftApi } from "../../api";
 import { useSession } from "../../session";
 import AdminLayout from "./AdminLayout";
-import { jstTime, nextDates } from "../member/format";
+import StoreClosureSection from "./StoreClosureSection";
+import { jstTime } from "../member/format";
 
 const HOURS = Array.from({ length: 25 }, (_, i) => `${String(i).padStart(2, "0")}:00`);
 
@@ -37,7 +49,11 @@ export default function ShiftsScreen() {
   // サーバー側でも同じ判定をしているので、ここは見せ方の調整。
   const isStoreAdmin = admin?.role === "admin";
   const canEdit = (staffId) => isStoreAdmin || staffId === admin?.id;
-  const dates = nextDates(14);
+
+  // 日付はプルダウンではなくカレンダーで選ぶ。2ヶ月先の予定も
+  // 目で探して入れられるようにするため。
+  const today = todayISO();
+  const lastDay = addDays(today, 365);
 
   const [staff, setStaff] = useState([]);
   const [banner, setBanner] = useState(null);
@@ -47,8 +63,8 @@ export default function ShiftsScreen() {
   const [form, setForm] = useState({
     action: "create",
     adminId: "",            // "" は全トレーナー(店舗管理者のみ)
-    from: dates[0].value,
-    to: dates[6].value,
+    from: today,
+    to: addDays(today, 6),
     start: "09:00",
     end: "18:00",
     capacity: "1",
@@ -57,10 +73,18 @@ export default function ShiftsScreen() {
   const [running, setRunning] = useState(false);
 
   // 当日の枠
-  const [date, setDate] = useState(dates[0].value);
+  const [date, setDate] = useState(today);
   const [slots, setSlots] = useState(null);
   const [selected, setSelected] = useState(new Set());
   const [updating, setUpdating] = useState(false);
+  const [pickDate, setPickDate] = useState(false);
+
+  // 休館日。カレンダーに濃いグレーで出して、休みの日に枠を作らないようにする。
+  const [closedDays, setClosedDays] = useState([]);
+  const closedMarks = {};
+  closedDays.forEach((d) => {
+    closedMarks[d] = { closed: true, title: "休館日" };
+  });
 
   useEffect(() => {
     shiftApi.listStaff().then(({ data, error }) => {
@@ -68,6 +92,15 @@ export default function ShiftsScreen() {
       setStaff(data || []);
     });
   }, []);
+
+  const loadClosed = useCallback(async () => {
+    const { data } = await shiftApi.listClosedDays({ from: today, to: lastDay });
+    setClosedDays((data || []).map((d) => d.day));
+  }, [today, lastDay]);
+
+  useEffect(() => {
+    loadClosed();
+  }, [loadClosed]);
 
   const loadSlots = useCallback(async () => {
     if (!admin) return;
@@ -143,6 +176,8 @@ export default function ShiftsScreen() {
     loadSlots();
   }
 
+  const closedInRange = closedDays.filter((d) => d >= form.from && d <= form.to).length;
+
   const byStaff = {};
   (slots || []).forEach((s) => {
     (byStaff[s.staff_id] ||= { name: s.admins?.name || "—", rows: [] }).rows.push(s);
@@ -156,6 +191,13 @@ export default function ShiftsScreen() {
           <Toast>{toast}</Toast>
         </div>
       )}
+
+      <StoreClosureSection
+        onFlash={(m) => {
+          flash(m);
+          loadClosed();
+        }}
+      />
 
       {/* ---- 一括操作 ---- */}
       <div style={{ border: `1px solid ${T.border}`, borderRadius: radius.lg, padding: 16, marginBottom: 22 }}>
@@ -181,14 +223,6 @@ export default function ShiftsScreen() {
               }
             />
           </Field>
-          <Field label="開始日">
-            <Select value={form.from} onChange={(v) => setForm({ ...form, from: v })}
-              options={dates.map((d) => ({ value: d.value, label: d.label }))} />
-          </Field>
-          <Field label="終了日">
-            <Select value={form.to} onChange={(v) => setForm({ ...form, to: v })}
-              options={dates.map((d) => ({ value: d.value, label: d.label }))} />
-          </Field>
           <Field label="開始時刻">
             <Select value={form.start} onChange={(v) => setForm({ ...form, start: v })}
               options={HOURS.slice(0, 24).map((h) => ({ value: h, label: h }))} />
@@ -201,6 +235,33 @@ export default function ShiftsScreen() {
             <Field label="1枠あたりの定員">
               <TextField value={form.capacity} onChange={(v) => setForm({ ...form, capacity: v })} />
             </Field>
+          )}
+        </div>
+
+        {/* 対象の期間。カレンダーで選ぶ。 */}
+        <div style={{ marginTop: 16, marginBottom: 14 }}>
+          <div style={{ fontSize: 11, color: T.textMute, fontWeight: 500, marginBottom: 7 }}>
+            対象の期間(クリックで開始日、もう一度クリックで終了日)
+          </div>
+          <div style={{ maxWidth: 520 }}>
+            <MonthCalendar
+              mode="range"
+              value={{ from: form.from, to: form.to }}
+              onChange={({ from, to }) => setForm({ ...form, from, to: to || from })}
+              min={today}
+              max={lastDay}
+              marks={closedMarks}
+            />
+          </div>
+          <div style={{ fontSize: 11.5, color: T.navy, fontWeight: 500, marginTop: 8 }}>
+            {form.from === form.to
+              ? `${dayLabel(form.from)} の1日`
+              : `${dayLabel(form.from)} 〜 ${dayLabel(form.to)}`}
+          </div>
+          {closedInRange > 0 && (
+            <div style={{ fontSize: 11, color: T.textMute, lineHeight: 1.8, marginTop: 4 }}>
+              この期間には休館日が {closedInRange} 日(濃いグレー)含まれています。枠を作っても、その日は予約を受け付けません。
+            </div>
           )}
         </div>
 
@@ -279,11 +340,56 @@ export default function ShiftsScreen() {
       {/* ---- 日別の枠 ---- */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
         <div style={{ fontSize: 13, fontWeight: 500 }}>登録済みの枠</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 11, color: T.textMute }}>日付</span>
-          <Select value={date} onChange={setDate} options={dates.map((d) => ({ value: d.value, label: d.label }))} width={140} />
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <Button variant="ghost" onClick={() => setDate(addDays(date, -1))} disabled={date <= today}>
+            前日
+          </Button>
+          <button
+            type="button"
+            onClick={() => setPickDate((v) => !v)}
+            style={{
+              border: `1px solid ${T.fieldBorder}`,
+              background: pickDate ? T.navySoft : T.bg,
+              color: T.navy,
+              borderRadius: radius.md,
+              padding: "8px 12px",
+              fontSize: 12,
+              fontWeight: 500,
+              fontFamily: font,
+              cursor: "pointer",
+            }}
+          >
+            {dayLabel(date)} ▾
+          </button>
+          <Button variant="ghost" onClick={() => setDate(addDays(date, 1))}>
+            翌日
+          </Button>
         </div>
       </div>
+
+      {pickDate && (
+        <div
+          style={{
+            border: `1px solid ${T.border}`,
+            borderRadius: radius.lg,
+            padding: 14,
+            marginBottom: 12,
+            maxWidth: 520,
+          }}
+        >
+          <MonthCalendar
+            mode="single"
+            value={date}
+            onChange={(v) => {
+              setDate(v);
+              setPickDate(false);
+            }}
+            min={today}
+            max={lastDay}
+            marks={closedMarks}
+          />
+        </div>
+      )}
 
       {selected.size > 0 && (
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>

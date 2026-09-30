@@ -148,6 +148,43 @@ export const shiftApi = {
     return apiCall(() => supabase.rpc("list_day_slots", { p_date: date }));
   },
 
+  // ------------------------------------------------------------
+  // 休館日
+  // ------------------------------------------------------------
+  // 店舗として休む日。定休日(曜日)と、日付ごとの指定の2本立て。
+  // 休館日に予約が入っていても予約は消さない。件数が返るので画面で知らせる。
+  // ------------------------------------------------------------
+
+  // 設定内容そのもの(臨時休館・臨時営業の一覧)。予約件数つき。
+  // 返り値: [{ closed_on, is_open, note, reservations }]
+  listClosures({ from, to }) {
+    return apiCall(() => supabase.rpc('list_store_closures', { p_from: from, p_to: to }));
+  },
+
+  // 実際に休館となる日(定休日を展開したもの)。会員側でも使う。
+  // 返り値: [{ day, note }]
+  listClosedDays({ from, to }) {
+    return apiCall(() => supabase.rpc('list_closed_days', { p_from: from, p_to: to }));
+  },
+
+  // その期間に入っている予約の件数。休館にする前の確認に使う。
+  countReservations({ from, to }) {
+    return apiCall(() => supabase.rpc('count_reservations_on', { p_from: from, p_to: to }));
+  },
+
+  // mode: 'closed'(臨時休館)/ 'open'(臨時営業)/ 'clear'(指定を消す)
+  // 返り値: [{ affected, reservations }]
+  setClosure({ from, to, mode, note = null }) {
+    return apiCall(() =>
+      supabase.rpc('set_store_closure', { p_from: from, p_to: to, p_mode: mode, p_note: note })
+    );
+  },
+
+  // 定休日(0=日〜6=土)。返り値は、今後の予約のうち該当する件数。
+  setClosedWeekdays({ weekdays }) {
+    return apiCall(() => supabase.rpc('set_closed_weekdays', { p_weekdays: weekdays }));
+  },
+
   // 枠の配置 / 解除。戻り値は 'added' か 'removed'。
   // 予約が入っている枠は解除できない(slot_in_use)。
   toggleSlot({ staffId, startAt, capacity = 1 }) {
